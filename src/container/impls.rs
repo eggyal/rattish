@@ -20,7 +20,7 @@ unsafe impl<'a> super::Coercible<'a> for dyn Any {
     }
 }
 
-castables! {
+coercibles! {
     <'a, T, U>(self) {
         &'a T => &'a T::Coerced<U>,
         &'a mut T => &'a T::Coerced<U>,

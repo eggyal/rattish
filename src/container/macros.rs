@@ -1,6 +1,6 @@
-macro_rules! castables {
+macro_rules! coercibles {
     (<$lt:lifetime, $x:ident, $u:ident>($self:ident) {
-        $(#[$feature:literal])? $ty:ty => $casted:ty $body:block,
+        $(#[$feature:literal])? $ty:ty => $coerced:ty $body:block,
         $($rest:tt)*
     }) => {
         $(
@@ -11,26 +11,26 @@ macro_rules! castables {
         where
             $x: ?::core::marker::Sized + $crate::container::Coercible<'a>,
         {
-            type Coerced<$u: $lt + ?::core::marker::Sized> = $casted;
+            type Coerced<$u: $lt + ?::core::marker::Sized> = $coerced;
             type Innermost = $x::Innermost;
 
             #[inline(always)]
             fn innermost_type_id(&$self) -> ::core::any::TypeId $body
         }
 
-        castables! {
+        coercibles! {
             <$lt, $x, $u>($self) {
                 $($rest)*
             }
         }
     };
     (<$lt:lifetime, $x:ident, $u:ident>($self:ident) {
-        $(#[$feature:literal])? $ty:ty => $casted:ty,
+        $(#[$feature:literal])? $ty:ty => $coerced:ty,
         $($rest:tt)*
     }) => {
-        castables! {
+        coercibles! {
             <$lt, $x, $u>($self) {
-                $(#[$feature])? $ty => $casted { (**$self).innermost_type_id() }, $($rest)*
+                $(#[$feature])? $ty => $coerced { (**$self).innermost_type_id() }, $($rest)*
             }
         }
     };
