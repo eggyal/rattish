@@ -34,8 +34,8 @@ coercible_trait!(Any);
 
 coercibles! {
     <'a, T, U>(self) {
-        &T => &'a T::Coerced<U>,
-        &mut T => &'a mut T::Coerced<U>,
+        &'a T => &'a T::Coerced<U>,
+        &'a mut T => &'a mut T::Coerced<U>,
         RefCell<T> => RefCell<T::Coerced<U>> { (&*self.borrow()).innermost_type_id() },
         Ref<'a, T> => Ref<'a, T::Coerced<U>>,
         RefMut<'a, T> => RefMut<'a, T::Coerced<U>>,

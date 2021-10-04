@@ -26,7 +26,7 @@ pub unsafe trait Coercible<'a> {
     /// presently rendered by Rustdoc.  Its full declaration is:
     ///
     /// ```ignore
-    /// type Coerced<U: ?Sized>: 'a + ?Sized
+    /// type Coerced<U: 'a + ?Sized>: 'a + ?Sized
     /// ```
     ///
     /// For example: `&mut T` becomes `&mut U`, `Box<T>` becomes `Box<U>`, etc.

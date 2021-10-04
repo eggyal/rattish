@@ -107,7 +107,7 @@ where
     DB: TypeDatabase,
 {
     /// Lookup whether `self`'s ultimate concrete type implements `U` in `db`.
-    fn dyn_implements<U>(&self, db: &DB) -> bool
+    fn dyn_implements<U>(&'a self, db: &DB) -> bool
     where
         U: 'static + ?Sized,
     {
@@ -139,7 +139,7 @@ where
     }
 }
 
-impl<'a, DB, P> DynImplements<'a, DB> for P
+impl<'a, DB, P: ?Sized> DynImplements<'a, DB> for P
 where
     Self: Coercible<'a>,
     DB: TypeDatabase,
@@ -164,11 +164,11 @@ where
 {
     /// Lookup whether `self`'s ultimate concrete type implements `U` in the
     /// global [`DB`].
-    fn dyn_implements<U>(&self) -> bool
+    fn dyn_implements<U>(&'a self) -> bool
     where
         U: 'static + ?Sized,
     {
-        DynImplements::dyn_implements::<U>(&self, DB.get().expect("initialized database"))
+        DynImplements::dyn_implements::<U>(self, DB.get().expect("initialized database"))
     }
 }
 
