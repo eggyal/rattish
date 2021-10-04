@@ -4,8 +4,8 @@
 #[macro_export]
 macro_rules! coercible_trait {
     ($trait:path) => {
-        unsafe impl $crate::container::Coercible for dyn $trait {
-            type Coerced<'a, U: 'a + ?Sized> = U;
+        unsafe impl<'a> $crate::container::Coercible<'a> for dyn $trait {
+            type Coerced<U: 'a + ?Sized> = U;
             type Innermost = Self;
             fn innermost_type_id(&self) -> ::core::any::TypeId {
                 ::core::any::Any::type_id(self)
@@ -23,11 +23,11 @@ macro_rules! coercibles {
             #[cfg(any(feature = $feature, doc))]
             #[doc(cfg(feature = $feature))]
         )?
-        unsafe impl<$x> $crate::container::Coercible for $ty
+        unsafe impl<$lt, $x> $crate::container::Coercible<$lt> for $ty
         where
-            $x: ?::core::marker::Sized + $crate::container::Coercible,
+            $x: ?::core::marker::Sized + $crate::container::Coercible<$lt>,
         {
-            type Coerced<$lt, $u: $lt + ?::core::marker::Sized> = $coerced;
+            type Coerced<$u: $lt + ?::core::marker::Sized> = $coerced;
             type Innermost = $x::Innermost;
             fn innermost_type_id(&$self) -> ::core::any::TypeId $body
         }
@@ -63,12 +63,12 @@ macro_rules! pointers {
         )?
         impl<$lt, $x> $crate::container::Pointer<$lt> for $ty
         where
-            $x: ?::core::marker::Sized + $crate::container::Coercible,
+            $x: ?::core::marker::Sized + $crate::container::Coercible<$lt>,
         {
-            unsafe fn coerce<U>($self, $metadata: $crate::container::Metadata<$crate::container::Coerced<'a, Self::Target, U>>) -> Self::Coerced<'a, U>
+            unsafe fn coerce<U>($self, $metadata: $crate::container::Metadata<$crate::container::Coerced<'a, Self::Target, U>>) -> Self::Coerced<U>
             where
                 U: ?Sized,
-                Self::Coerced<'a, U>: Sized,
+                Self::Coerced<U>: Sized,
             $body
         }
     )+)+};

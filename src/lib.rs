@@ -103,11 +103,11 @@ use db::hash_map::DB;
 /// A type whose implementations can be dynamically determined.
 pub trait DynImplements<'a, DB>
 where
-    Self: Coercible,
+    Self: Coercible<'a>,
     DB: TypeDatabase,
 {
     /// Lookup whether `self`'s ultimate concrete type implements `U` in `db`.
-    fn dyn_implements<U>(&'a self, db: &DB) -> bool
+    fn dyn_implements<U>(&self, db: &DB) -> bool
     where
         U: 'static + ?Sized,
     {
@@ -121,15 +121,15 @@ where
 pub trait DynCast<'a, DB>
 where
     Self: Pointer<'a>,
-    Self::Target: Coercible,
+    Self::Target: Coercible<'a>,
     DB: TypeDatabase,
 {
     /// Downcast `self`'s ultimate concrete type to `U`, if registered as an
     /// implementor of `U` in `db`.
-    fn dyn_cast<U>(self, db: &DB) -> Result<Self::Coerced<'a, U>, Self>
+    fn dyn_cast<U>(self, db: &DB) -> Result<Self::Coerced<U>, Self>
     where
         U: 'static + ?Sized,
-        Self::Coerced<'a, U>: Sized,
+        Self::Coerced<U>: Sized,
         Coerced<'a, Self::Target, U>: ptr::Pointee<Metadata = Metadata<U>>,
     {
         match db.get_entry() {
@@ -141,7 +141,7 @@ where
 
 impl<'a, DB, P> DynImplements<'a, DB> for P
 where
-    Self: Coercible,
+    Self: Coercible<'a>,
     DB: TypeDatabase,
 {
 }
@@ -149,7 +149,7 @@ where
 impl<'a, DB, P> DynCast<'a, DB> for P
 where
     Self: Pointer<'a>,
-    Self::Target: Coercible,
+    Self::Target: Coercible<'a>,
     DB: TypeDatabase,
 {
 }
@@ -159,10 +159,10 @@ where
 /// A type whose implementations can be dynamically determined using [`DB`].
 pub trait StaticDynImplements<'a>
 where
-    Self: Coercible,
+    Self: Coercible<'a>,
 {
     /// Lookup whether `self`'s ultimate concrete type implements `U` in [`DB`].
-    fn dyn_implements<U>(&'a self) -> bool
+    fn dyn_implements<U>(&self) -> bool
     where
         U: 'static + ?Sized,
     {
@@ -176,14 +176,14 @@ where
 pub trait StaticDynCast<'a>
 where
     Self: Pointer<'a>,
-    Self::Target: Coercible,
+    Self::Target: Coercible<'a>,
 {
     /// Downcast `self`'s ultimate concrete type to `U`, if registered as an
     /// implementor of `U` in [`DB`].
-    fn dyn_cast<U>(self) -> Result<Self::Coerced<'a, U>, Self>
+    fn dyn_cast<U>(self) -> Result<Self::Coerced<U>, Self>
     where
         U: 'static + ?Sized,
-        Self::Coerced<'a, U>: Sized,
+        Self::Coerced<U>: Sized,
         Coerced<'a, Self::Target, U>: ptr::Pointee<Metadata = Metadata<U>>,
     {
         DynCast::dyn_cast::<U>(self, DB.get().expect("initialized database"))
@@ -192,13 +192,13 @@ where
 
 #[cfg(any(feature = "static", doc))]
 #[doc(cfg(feature = "static"))]
-impl<'a, P> StaticDynImplements<'a> for P where Self: Coercible {}
+impl<'a, P> StaticDynImplements<'a> for P where Self: Coercible<'a> {}
 
 #[cfg(any(feature = "static", doc))]
 #[doc(cfg(feature = "static"))]
 impl<'a, P> StaticDynCast<'a> for P
 where
     Self: Pointer<'a>,
-    Self::Target: Coercible,
+    Self::Target: Coercible<'a>,
 {
 }

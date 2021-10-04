@@ -34,14 +34,14 @@ coercible_trait!(Any);
 
 coercibles! {
     <'a, T, U>(self) {
-        &T => &'a T::Coerced<'a, U>,
-        &mut T => &'a mut T::Coerced<'a, U>,
-        RefCell<T> => RefCell<T::Coerced<'a, U>> { self.borrow().innermost_type_id() },
-        Ref<'_, T> => Ref<'a, T::Coerced<'a, U>>,
-        RefMut<'_, T> => RefMut<'a, T::Coerced<'a, U>>,
-        #["alloc"] Box<T> => Box<T::Coerced<'a, U>>,
-        #["alloc"] Rc<T> => Rc<T::Coerced<'a, U>>,
-        #["alloc"] Arc<T> => Arc<T::Coerced<'a, U>>,
+        &T => &'a T::Coerced<U>,
+        &mut T => &'a mut T::Coerced<U>,
+        RefCell<T> => RefCell<T::Coerced<U>> { self.borrow().innermost_type_id() },
+        Ref<'_, T> => Ref<'a, T::Coerced<U>>,
+        RefMut<'_, T> => RefMut<'a, T::Coerced<U>>,
+        #["alloc"] Box<T> => Box<T::Coerced<U>>,
+        #["alloc"] Rc<T> => Rc<T::Coerced<U>>,
+        #["alloc"] Arc<T> => Arc<T::Coerced<U>>,
     }
 }
 

@@ -57,18 +57,18 @@ where
     /// Whether `data` is registered as an implementor of `U`.
     fn implements<'a, P>(&self, data: P) -> bool
     where
-        P: Coercible,
+        P: Coercible<'a>,
     {
         self.contains(data.innermost_type_id())
     }
 
     /// Downcast `pointer` to `P::Coerced<U>`, if registered as an implementor
     /// of `U`.
-    fn downcast<'a, P>(&self, pointer: P) -> Result<P::Coerced<'a, U>, P>
+    fn downcast<'a, P>(&self, pointer: P) -> Result<P::Coerced<U>, P>
     where
         P: Pointer<'a>,
-        P::Coerced<'a, U>: Sized,
-        P::Target: Coercible,
+        P::Coerced<U>: Sized,
+        P::Target: Coercible<'a>,
         Coerced<'a, P::Target, U>: ptr::Pointee<Metadata = Metadata<U>>,
     {
         unsafe {

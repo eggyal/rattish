@@ -18,7 +18,7 @@ pub type Metadata<U> = <U as ptr::Pointee>::Metadata;
 /// # Safety
 /// The safety of unsafe code in rattish depends upon this trait being correctly
 /// implemented.
-pub unsafe trait Coercible {
+pub unsafe trait Coercible<'a> {
     /// The type that `Self` will become if the contained type is coerced to
     /// `U`.
     ///
@@ -26,12 +26,12 @@ pub unsafe trait Coercible {
     /// presently rendered by Rustdoc.  Its full declaration is:
     ///
     /// ```ignore
-    /// type Coerced<'a, U: 'a + ?Sized>: 'a + ?Sized
+    /// type Coerced<U: ?Sized>: 'a + ?Sized
     /// ```
     ///
     /// For example: `&mut T` becomes `&mut U`, `Box<T>` becomes `Box<U>`, etc.
     /// A `dyn Trait` will generally just become `U`.
-    type Coerced<'a, U: 'a + ?Sized>: 'a + ?Sized;
+    type Coerced<U: 'a + ?Sized>: 'a + ?Sized;
 
     /// The ultimate type whose
     /// [`Pointee::Metadata`][ptr::Pointee::Metadata] is that of `Self`.  For
@@ -54,7 +54,7 @@ pub unsafe trait Coercible {
 
 /// The type that `X` will become if its contained type is coerced to `Y`.
 #[allow(type_alias_bounds)]
-pub type Coerced<'a, X: Coercible, Y> = X::Coerced<'a, Y>;
+pub type Coerced<'a, X: Coercible<'a>, Y> = X::Coerced<Y>;
 
 /// Reference coercion.
 pub trait Coerce {
@@ -78,19 +78,16 @@ pub trait Coerce {
 /// A pointer-type to a [`Coercible`].
 pub trait Pointer<'a>
 where
-    Self: Coercible + Deref + Sized,
-    Self::Target: Coercible,
+    Self: Coercible<'a> + Deref + Sized,
+    Self::Target: Coercible<'a>,
 {
     /// Perform the coercion.
     ///
     /// # Safety
     /// `metadata` must be correct for `Self::Target`.
-    unsafe fn coerce<U>(
-        self,
-        metadata: Metadata<Coerced<'a, Self::Target, U>>,
-    ) -> Self::Coerced<'a, U>
+    unsafe fn coerce<U>(self, metadata: Metadata<Coerced<'a, Self::Target, U>>) -> Self::Coerced<U>
     where
         U: ?Sized,
-        Self::Coerced<'a, U>: Sized;
+        Self::Coerced<U>: Sized;
     // Coerced<'a, Self::Innermost, U>: ptr::Pointee<Metadata = Metadata<U>>;
 }
