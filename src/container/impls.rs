@@ -12,7 +12,6 @@ impl<T> Coerce for T
 where
     T: ?Sized,
 {
-    #[inline(always)]
     unsafe fn coerce_ref<U>(&self, metadata: Metadata<U>) -> &U
     where
         U: ?Sized,
@@ -21,8 +20,6 @@ where
         let ptr = ptr::from_raw_parts(data_address, metadata);
         &*ptr
     }
-
-    #[inline(always)]
     unsafe fn coerce_mut<U>(&mut self, metadata: Metadata<U>) -> &mut U
     where
         U: ?Sized,

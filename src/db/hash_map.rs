@@ -24,7 +24,6 @@ impl<U> Default for HashMapTypeDatabaseEntry<U>
 where
     U: ?Sized,
 {
-    #[inline(always)]
     fn default() -> Self {
         HashMapTypeDatabaseEntry(Default::default())
     }
@@ -66,17 +65,14 @@ unsafe impl<U> TypeDatabaseEntry<U> for HashMapTypeDatabaseEntry<U>
 where
     U: ?Sized,
 {
-    #[inline(always)]
     unsafe fn add(&mut self, type_id: TypeId, metadata: Metadata<U>) {
         self.0.insert(type_id, metadata);
     }
 
-    #[inline(always)]
     fn contains<'a>(&self, type_id: TypeId) -> bool {
         self.0.contains_key(&type_id)
     }
 
-    #[inline(always)]
     fn metadata(&self, type_id: TypeId) -> Option<&Metadata<U>> {
         self.0.get(&type_id)
     }
@@ -97,7 +93,6 @@ unsafe impl TypeDatabase for HashMapTypeDatabase {
             .unwrap()
     }
 
-    #[inline(always)]
     fn get_entry<U>(&self) -> Option<&Self::Entry<U>>
     where
         U: 'static + ?Sized,

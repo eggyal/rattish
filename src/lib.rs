@@ -92,7 +92,6 @@ where
     DB: TypeDatabase,
 {
     /// Lookup whether `self`'s ultimate concrete type implements `U` in `db`.
-    #[inline(always)]
     fn dyn_implements<U>(&'a self, db: &DB) -> bool
     where
         U: 'static + ?Sized,
@@ -112,7 +111,6 @@ where
 {
     /// Downcast `self`'s ultimate concrete type to `U`, if registered as an
     /// implementor of `U` in `db`.
-    #[inline(always)]
     fn dyn_cast<U>(self, db: &DB) -> Result<Self::Coerced<'a, U>, Self>
     where
         U: 'static + ?Sized,
@@ -149,7 +147,6 @@ where
     Self: Coercible,
 {
     /// Lookup whether `self`'s ultimate concrete type implements `U` in [`DB`].
-    #[inline(always)]
     fn dyn_implements<U>(&'a self) -> bool
     where
         U: 'static + ?Sized,
@@ -168,7 +165,6 @@ where
 {
     /// Downcast `self`'s ultimate concrete type to `U`, if registered as an
     /// implementor of `U` in [`DB`].
-    #[inline(always)]
     fn dyn_cast<U>(self) -> Result<Self::Coerced<'a, U>, Self>
     where
         U: 'static + ?Sized,

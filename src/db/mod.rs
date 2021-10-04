@@ -43,7 +43,6 @@ where
     U: ?Sized,
 {
     /// Register concrete type `I` as an implementor of `U`.
-    #[inline(always)]
     fn register<I>(&mut self)
     where
         I: 'static + Unsize<U>,
@@ -56,7 +55,6 @@ where
     }
 
     /// Whether `data` is registered as an implementor of `U`.
-    #[inline(always)]
     fn implements<'a, P>(&self, data: P) -> bool
     where
         P: Coercible,
@@ -66,7 +64,6 @@ where
 
     /// Downcast `pointer` to `P::Coerced<U>`, if registered as an implementor
     /// of `U`.
-    #[inline(always)]
     fn downcast<'a, P>(&self, pointer: P) -> Result<P::Coerced<'a, U>, P>
     where
         P: Pointer<'a>,
