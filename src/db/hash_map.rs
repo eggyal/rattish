@@ -45,7 +45,7 @@ macro_rules! rtti {
     }};
 }
 
-/// An immutable, thread-safe [`HashMapTypeDatabase`].
+/// A global, immutable, thread-safe [`HashMapTypeDatabase`].
 #[cfg(any(feature = "static", doc))]
 #[doc(cfg(feature = "static"))]
 pub static DB: SyncOnceCell<HashMapTypeDatabase> = SyncOnceCell::new();

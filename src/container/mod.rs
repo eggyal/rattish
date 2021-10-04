@@ -14,6 +14,10 @@ pub type Metadata<U> = <U as ptr::Pointee>::Metadata;
 /// A type that inherits [`Pointee::Metadata`][ptr::Pointee::Metadata]
 /// from a contained type, and whose pointers are therefore coercible if that
 /// contained type is coercible.
+///
+/// # Safety
+/// The safety of unsafe code in rattish depends upon this trait being correctly
+/// implemented.
 pub unsafe trait Coercible {
     /// The type that `Self` will become if the contained type is coerced to
     /// `U`.
@@ -22,18 +26,29 @@ pub unsafe trait Coercible {
     /// presently rendered by Rustdoc.  Its full declaration is:
     ///
     /// ```ignore
-    /// type Coerced<U: ?Sized>: ?Sized
+    /// type Coerced<'a, U: 'a + ?Sized>: 'a + ?Sized
     /// ```
+    ///
+    /// For example: `&mut T` becomes `&mut U`, `Box<T>` becomes `Box<U>`, etc.
+    /// A `dyn Trait` will generally just become `U`.
     type Coerced<'a, U: 'a + ?Sized>: 'a + ?Sized;
 
     /// The ultimate type whose
     /// [`Pointee::Metadata`][ptr::Pointee::Metadata] is that of `Self`.  For
     /// example, if `Self::Metadata` is [`DynMetadata<T>`][ptr::DynMetadata],
     /// then `Innermost` will be `T`.
+    ///
+    /// Unless `Self` is a leaf, such as a `dyn Trait` (in which case this is
+    /// just `Self`), this should just delegate to the contained type's
+    /// `Innermost`.
     type Innermost: ?Sized;
 
     /// Returns the [`TypeId`] of the *concrete* value underlying
     /// [`Innermost`][Coercible::Innermost].
+    ///
+    /// Unless `Self` is a leaf, such as a `dyn Trait` (in which case this
+    /// should delegate to a trait method), this should just delegate to the
+    /// contained type's `innermost_type_id`.
     fn innermost_type_id(&self) -> TypeId;
 }
 
