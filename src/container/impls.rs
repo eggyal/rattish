@@ -1,17 +1,40 @@
-use super::{NonNullConst, NonNullMut};
+use super::{Coerce, Metadata};
 use core::{
     any::{Any, TypeId},
     cell::{Ref, RefCell, RefMut},
-    ops::DerefMut,
+    ptr,
 };
 
 #[cfg(any(feature = "alloc", doc))]
 use alloc::{boxed::Box, rc::Rc, sync::Arc};
-#[cfg(feature = "alloc")]
-use core::mem;
 
-unsafe impl<'a> super::Coercible<'a> for dyn Any {
-    type Coerced<U: 'a + ?Sized> = U;
+impl<T> Coerce for T
+where
+    T: ?Sized,
+{
+    #[inline(always)]
+    unsafe fn coerce_ref<U>(&self, metadata: Metadata<U>) -> &U
+    where
+        U: ?Sized,
+    {
+        let data_address = (self as *const Self).cast();
+        let ptr = ptr::from_raw_parts(data_address, metadata);
+        &*ptr
+    }
+
+    #[inline(always)]
+    unsafe fn coerce_mut<U>(&mut self, metadata: Metadata<U>) -> &mut U
+    where
+        U: ?Sized,
+    {
+        let data_address = (self as *mut Self).cast();
+        let ptr = ptr::from_raw_parts_mut(data_address, metadata);
+        &mut *ptr
+    }
+}
+
+unsafe impl super::Coercible for dyn Any {
+    type Coerced<'a, U: 'a + ?Sized> = U;
     type Innermost = Self;
 
     #[inline(always)]
@@ -22,34 +45,25 @@ unsafe impl<'a> super::Coercible<'a> for dyn Any {
 
 coercibles! {
     <'a, T, U>(self) {
-        &'a T => &'a T::Coerced<U>,
-        &'a mut T => &'a T::Coerced<U>,
-        RefCell<T> => RefCell<T::Coerced<U>> { self.borrow().innermost_type_id() },
-        Ref<'_, T> => Ref<'a, T::Coerced<U>>,
-        RefMut<'_, T> => RefMut<'a, T::Coerced<U>>,
-        #["alloc"] Box<T> => Box<T::Coerced<U>>,
-        #["alloc"] Rc<T> => Rc<T::Coerced<U>>,
-        #["alloc"] Arc<T> => Arc<T::Coerced<U>>,
+        &T => &'a T::Coerced<'a, U>,
+        &mut T => &'a T::Coerced<'a, U>,
+        RefCell<T> => RefCell<T::Coerced<'a, U>> { self.borrow().innermost_type_id() },
+        Ref<'_, T> => Ref<'a, T::Coerced<'a, U>>,
+        RefMut<'_, T> => RefMut<'a, T::Coerced<'a, U>>,
+        #["alloc"] Box<T> => Box<T::Coerced<'a, U>>,
+        #["alloc"] Rc<T> => Rc<T::Coerced<'a, U>>,
+        #["alloc"] Arc<T> => Arc<T::Coerced<'a, U>>,
     }
-}
-
-recasts! {
-    /// A [`PointerCoercer`][super::PointerCoercer] for [`Pointer`][super::Pointer]s that are created from immutable pointers.
-    ConstCoercer<P, U> -> NonNullConst
-    /// A [`PointerCoercer`][super::PointerCoercer] for [`Pointer`][super::Pointer]s that are created from mutable pointers.
-    MutCoercer<P: DerefMut, U> -> NonNullMut
 }
 
 pointers! {
-    ConstCoercer<'a, T>(self, ptr) {
-        &'a T { ptr.as_ref() }
-        Ref<'a, T> { Ref::map(self, |_| ptr.as_ref()) }
-        #["alloc"] Rc<T> { mem::forget(self); Rc::from_raw(ptr.as_ref()) }
-        #["alloc"] Arc<T> { mem::forget(self); Arc::from_raw(ptr.as_ref()) }
-    }
-    MutCoercer<'a, T>(self, mut ptr) {
-        &'a mut T { ptr.as_mut() }
-        RefMut<'a, T> { RefMut::map(self, |_| ptr.as_mut()) }
-        #["alloc"] Box<T> { mem::forget(self); Box::from_raw(ptr.as_mut()) }
+    <'a, T>(self, metadata) {
+        &'a T { self.coerce_ref(metadata) }
+        &'a mut T { self.coerce_mut(metadata) }
+        Ref<'a, T> { Ref::map(self, |r| r.coerce_ref(metadata)) }
+        RefMut<'a, T> { RefMut::map(self, |r| r.coerce_mut(metadata)) }
+        #["alloc"] Box<T> { Box::from_raw(Box::leak(self).coerce_mut(metadata)) }
+        #["alloc"] Rc<T> { Rc::from_raw((&*Rc::into_raw(self)).coerce_ref(metadata)) }
+        #["alloc"] Arc<T> { Arc::from_raw((&*Arc::into_raw(self)).coerce_ref(metadata)) }
     }
 }

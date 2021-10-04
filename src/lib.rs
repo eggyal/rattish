@@ -62,7 +62,7 @@ use db::{TypeDatabase, TypeDatabaseEntryExt};
 /// A type whose implementations can be dynamically determined.
 pub trait DynImplements<'a, DB>
 where
-    Self: Coercible<'a>,
+    Self: Coercible,
     DB: TypeDatabase,
 {
     /// Lookup whether `self`'s ultimate concrete type implements `U` in `db`.
@@ -81,16 +81,16 @@ where
 pub trait DynDowncast<'a, DB>
 where
     Self: Pointer<'a>,
-    Self::Target: Coercible<'a>,
+    Self::Target: Coercible,
     DB: TypeDatabase,
 {
     /// Downcast `self`'s ultimate concrete type to `U`, if registered as an
     /// implementor of `U` in `db`.
     #[inline(always)]
-    fn dyn_downcast<U>(self, db: &DB) -> Result<Self::Coerced<U>, Self>
+    fn dyn_downcast<U>(self, db: &DB) -> Result<Self::Coerced<'a, U>, Self>
     where
         U: 'static + ?Sized,
-        Self::Coerced<U>: Sized,
+        Self::Coerced<'a, U>: Sized,
         Coerced<'a, Self::Target, U>: ptr::Pointee<Metadata = Metadata<U>>,
     {
         match db.get_entry() {
@@ -102,7 +102,7 @@ where
 
 impl<'a, DB, P> DynImplements<'a, DB> for P
 where
-    Self: Coercible<'a>,
+    Self: Coercible,
     DB: TypeDatabase,
 {
 }
@@ -110,7 +110,7 @@ where
 impl<'a, DB, P> DynDowncast<'a, DB> for P
 where
     Self: Pointer<'a>,
-    Self::Target: Coercible<'a>,
+    Self::Target: Coercible,
     DB: TypeDatabase,
 {
 }

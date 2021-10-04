@@ -59,7 +59,7 @@ where
     #[inline(always)]
     fn implements<'a, P>(&self, data: P) -> bool
     where
-        P: Coercible<'a>,
+        P: Coercible,
     {
         self.contains(data.innermost_type_id())
     }
@@ -67,17 +67,16 @@ where
     /// Downcast `pointer` to `P::Coerced<U>`, if registered as an implementor
     /// of `U`.
     #[inline(always)]
-    fn downcast<'a, P>(&self, pointer: P) -> Result<P::Coerced<U>, P>
+    fn downcast<'a, P>(&self, pointer: P) -> Result<P::Coerced<'a, U>, P>
     where
         P: Pointer<'a>,
-        P::Coerced<U>: Sized,
-        P::Target: Coercible<'a>,
+        P::Coerced<'a, U>: Sized,
+        P::Target: Coercible,
         Coerced<'a, P::Target, U>: ptr::Pointee<Metadata = Metadata<U>>,
     {
         unsafe {
-            use crate::container::PointerCoercer;
             match self.metadata(pointer.innermost_type_id()) {
-                Some(&metadata) => Ok(P::Coercer::coerce(pointer, metadata)),
+                Some(&metadata) => Ok(P::coerce(pointer, metadata)),
                 None => Err(pointer),
             }
         }
