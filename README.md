@@ -45,8 +45,8 @@ rtti_static! {
     fmt::LowerExp: u32 i32 f32,
 }
 
-// casting works through any type that implements Coercible
-// implementations are provided for all standard pointer and wrapper
+// casting works through any type that implements Coercible.
+// Implementations are provided for all standard pointer and wrapper
 // types; here, for example, are Rc and RefCell
 let foo: Rc<RefCell<dyn Foo>> = Rc::new(RefCell::new(Qux(123)));
 
