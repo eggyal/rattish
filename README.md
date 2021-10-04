@@ -15,12 +15,14 @@ features including [`generic_associated_types`], [`ptr_metadata`] and
 use rattish::{coercible_trait, rtti_static, StaticDynCast};
 use std::{any::Any, cell::RefCell, fmt, rc::Rc};
 
-// casting from an object of trait Foo requires Foo to have super-trait Any..
+// casting from an object of trait Foo requires Foo to have
+// super-trait Any..
 trait Foo: Any {}
 // ..and that Foo implements Coercible, for which there is a macro
 coercible_trait!(Foo);
 
-// casting to an object of trait Bar does not require anything special..
+// casting to an object of trait Bar does not require anything
+// special..
 trait Bar {
     fn bar(&self) -> i32;
 }
@@ -33,8 +35,9 @@ impl Bar for Qux {
     }
 }
 
-// ..except that Bar must be registered in the database with every one of its
-//  concrete types that might get dynamically cast to a Bar trait object
+// ..except that Bar must be registered in the database with every
+// one of its concrete types that might get dynamically cast to a
+// Bar trait object
 rtti_static! {
     Bar: Qux,
 
@@ -43,11 +46,12 @@ rtti_static! {
 }
 
 // casting works through any type that implements Coercible
-// implementations are provided for all standard pointer and wrapper types
-// here, for example, are Rc and RefCell
+// implementations are provided for all standard pointer and wrapper
+// types; here, for example, are Rc and RefCell
 let foo: Rc<RefCell<dyn Foo>> = Rc::new(RefCell::new(Qux(123)));
 
-// explicit type annotation not required; only included here for information
+// explicit type annotation not required; only included here for
+// information
 let bar: Rc<RefCell<dyn Bar>> = foo.dyn_cast::<dyn Bar>().ok().unwrap();
 let int = bar.borrow().bar();
 assert_eq!(int, 246);
