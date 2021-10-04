@@ -1,9 +1,9 @@
 [package]
 name = "rattish"
-version = "0.2.1"
+version = "0.2.2"
 authors = ["Alan Egerton <eggyal@gmail.com>"]
 edition = "2018"
-description = "Runtime type information for Rust."
+description = "Cast between trait objects."
 repository = "https://github.com/eggyal/rattish"
 license = "Apache-2.0"
 keywords = ["runtime", "type", "reflection", "rtti", "dynamic"]
