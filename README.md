@@ -80,5 +80,6 @@ if your type is a pointer-type (that is, if it is `Sized + Deref`).
 [`ptr_metadata`]: https://doc.rust-lang.org/nightly/unstable-book/library-features/ptr-metadata.html
 [`unsize`]: https://doc.rust-lang.org/nightly/unstable-book/library-features/unsize.html
 
+[`DB`]: https://docs.rs/rattish/latest/rattish/db/hash_map/static.DB.html
 [`Coercible`]: https://docs.rs/rattish/latest/rattish/container/trait.Coercible.html
 [`Pointer`]: https://docs.rs/rattish/latest/rattish/container/trait.Pointer.html
