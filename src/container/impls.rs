@@ -1,6 +1,6 @@
 use super::{Coerce, Metadata};
 use core::{
-    any::{Any, TypeId},
+    any::Any,
     cell::{Ref, RefCell, RefMut},
     ptr,
 };
@@ -33,15 +33,7 @@ where
     }
 }
 
-unsafe impl super::Coercible for dyn Any {
-    type Coerced<'a, U: 'a + ?Sized> = U;
-    type Innermost = Self;
-
-    #[inline(always)]
-    fn innermost_type_id(&self) -> TypeId {
-        self.type_id()
-    }
-}
+coercible_trait!(Any);
 
 coercibles! {
     <'a, T, U>(self) {

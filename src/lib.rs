@@ -1,47 +1,63 @@
 #![cfg_attr(not(any(feature = "std", doc)), no_std)]
-#![feature(doc_cfg, ptr_metadata, unsize, generic_associated_types)]
+#![feature(doc_cfg, generic_associated_types, ptr_metadata, unsize)]
 #![deny(missing_docs)]
 
-//! Objects of the core library's [`Any`][core::any::Any] trait, of which there
-//! is a blanket implementation for all `'static` types (whether [`Sized`] or
-//! not), can be downcast to references of their true concrete type: but they
-//! cannot be directly downcast to objects of other traits that are implemented
-//! by that concrete type.  For example, an `&dyn Any` can be downcast to an
-//! `&i32` (if it is indeed an `i32` beneath) but it cannot be directly downcast
-//! to, say, an `&dyn Display` (if its underlying concrete type does indeed
-//! implement `Display`).
+//! rattish enables dynamic casting between different trait objects.
 //!
-//! This isn't a problem if one *knows* the underlying concrete type, as clearly
-//! one can still reach any such implemented trait by first downcasting to that
-//! concrete type.  However, if the concrete type is not known, Rust does not
-//! have sufficient runtime information available to reach any other implemented
-//! traits.
+//! This functionality requires runtime type information that isn't
+//! automatically created by the Rust compiler and so must be generated
+//! manually.
 //!
-//! [`rattish`][self] provides such a runtime database together with facilities
-//! for directly downcasting from an `Any` trait object to objects of any trait
-//! that is registered in its database for the underlying concrete type.
-//!
-//! `rattish` is presently only experimental, and depends on unstable compiler
-//! features including [`ptr_metadata`] and [`unsize`] (it also uses
-//! [`generic_associated_types`] for some functionality; and, while the code
-//! could be refactored to remove that dependency, that feature is close to
-//! stabilization).  Accordingly, a nightly toolchain is required.
+//! rattish is presently only experimental, and depends on unstable compiler
+//! features including [`generic_associated_types`], [`ptr_metadata`] and
+//! [`unsize`].  Accordingly, a nightly toolchain is required.
 //!
 //! # Example
 //! ```rust
+//! # #![feature(generic_associated_types)]
 //! # #[cfg(feature = "std")]
 //! # {
-//! use rattish::{rtti, DynDowncast};
-//! use std::{any::Any, cell::RefCell, fmt};
+//! use rattish::{coercible_trait, rtti, DynCast};
+//! use std::{any::Any, cell::RefCell, fmt, rc::Rc};
 //!
+//! // casting from an object of trait Foo requires Foo to have super-trait Any..
+//! trait Foo: Any {}
+//! // ..and that Foo implements Coercible, for which there is a macro
+//! coercible_trait!(Foo);
+//!
+//! // casting to an object of trait Bar does not require anything special..
+//! trait Bar {
+//!     fn bar(&self) -> i32;
+//! }
+//!
+//! struct Qux(i32);
+//! impl Foo for Qux {}
+//! impl Bar for Qux {
+//!     fn bar(&self) -> i32 {
+//!         self.0 * 2
+//!     }
+//! }
+//!
+//! // ..except that Bar must be registered in the database with every one of its
+//! //  concrete types that might get dynamically cast to a Bar trait object
 //! let db = rtti! {
-//!     fmt::LowerExp: u32 f32,
+//!     Bar: Qux,
+//!     fmt::LowerExp: i32,
 //! };
 //!
-//! let any_box = Box::new(RefCell::new(123.456f32)) as Box<RefCell<dyn Any>>;
-//! let lowerexp_box = any_box.dyn_downcast::<dyn fmt::LowerExp>(&db).unwrap();
-//! assert!((&lowerexp_box as &dyn Any).is::<Box<RefCell<dyn fmt::LowerExp>>>());
-//! assert_eq!(format!("{:e}", &*RefCell::borrow(&lowerexp_box)), "1.23456e2");
+//! // casting works through any type that implements Coercible
+//! // implementations are provided for all standard pointer and wrapper types
+//! // here, for example Box, are Rc and RefCell
+//! let foo: Rc<RefCell<dyn Foo>> = Rc::new(RefCell::new(Qux(123)));
+//!
+//! // explicit type annotation not required; only included here for information
+//! let bar: Rc<RefCell<dyn Bar>> = foo.dyn_cast::<dyn Bar>(&db).ok().unwrap();
+//! let int = bar.borrow().bar();
+//! assert_eq!(int, 246);
+//!
+//! // enjoyed that?  have another, just for fun
+//! let exp = (&int as &dyn Any).dyn_cast::<dyn fmt::LowerExp>(&db).unwrap();
+//! assert_eq!(format!("{:e}", exp), "2.46e2");
 //! # }
 //! ```
 //!
@@ -78,7 +94,7 @@ where
 }
 
 /// A type that can be dynamically downcast.
-pub trait DynDowncast<'a, DB>
+pub trait DynCast<'a, DB>
 where
     Self: Pointer<'a>,
     Self::Target: Coercible,
@@ -87,7 +103,7 @@ where
     /// Downcast `self`'s ultimate concrete type to `U`, if registered as an
     /// implementor of `U` in `db`.
     #[inline(always)]
-    fn dyn_downcast<U>(self, db: &DB) -> Result<Self::Coerced<'a, U>, Self>
+    fn dyn_cast<U>(self, db: &DB) -> Result<Self::Coerced<'a, U>, Self>
     where
         U: 'static + ?Sized,
         Self::Coerced<'a, U>: Sized,
@@ -107,7 +123,7 @@ where
 {
 }
 
-impl<'a, DB, P> DynDowncast<'a, DB> for P
+impl<'a, DB, P> DynCast<'a, DB> for P
 where
     Self: Pointer<'a>,
     Self::Target: Coercible,
