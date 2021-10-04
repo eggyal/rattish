@@ -69,6 +69,7 @@ macro_rules! pointers {
         where
             $x: ?::core::marker::Sized + $crate::container::Coercible,
         {
+            #[inline(always)]
             unsafe fn coerce<U>($self, $metadata: $crate::container::Metadata<$crate::container::Coerced<'a, Self::Target, U>>) -> Self::Coerced<'a, U>
             where
                 U: ?Sized,
