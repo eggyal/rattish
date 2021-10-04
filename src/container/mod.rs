@@ -89,5 +89,4 @@ where
     where
         U: ?Sized,
         Self::Coerced<U>: Sized;
-    // Coerced<'a, Self::Innermost, U>: ptr::Pointee<Metadata = Metadata<U>>;
 }

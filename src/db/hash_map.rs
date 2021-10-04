@@ -45,12 +45,13 @@ macro_rules! rtti {
     }};
 }
 
-/// A global, immutable, thread-safe [`HashMapTypeDatabase`].
+/// A global, immutable, thread-safe [`HashMapTypeDatabase`] that can be
+/// initialized with [`rtti_static`].
 #[cfg(any(feature = "static", doc))]
 #[doc(cfg(feature = "static"))]
 pub static DB: SyncOnceCell<HashMapTypeDatabase> = SyncOnceCell::new();
 
-/// Instantiates [`DB`] with the provided entries.
+/// Instantiates the global [`DB`] with the provided entries.
 #[macro_export]
 #[cfg(any(feature = "static", doc))]
 #[doc(cfg(feature = "static"))]
@@ -60,7 +61,6 @@ macro_rules! rtti_static {
     }};
 }
 
-#[doc(cfg(feature = "std"))]
 unsafe impl<U> TypeDatabaseEntry<U> for HashMapTypeDatabaseEntry<U>
 where
     U: ?Sized,
@@ -78,7 +78,6 @@ where
     }
 }
 
-#[doc(cfg(feature = "std"))]
 unsafe impl TypeDatabase for HashMapTypeDatabase {
     type Entry<U: ?Sized> = HashMapTypeDatabaseEntry<U>;
 

@@ -1,6 +1,6 @@
 /// Implement [`Coercible`][super::Coercible] for the given trait, in order to
-/// be able to cast *from* objects of that trait (which also requires that the
-/// trait have [`Any`](core::any::Any) as a super-trait).
+/// be able to cast *from* objects of that trait (requires that the trait have
+/// [`Any`](core::any::Any) as a super-trait).
 #[macro_export]
 macro_rules! coercible_trait {
     ($trait:path) => {

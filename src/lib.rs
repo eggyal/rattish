@@ -156,12 +156,14 @@ where
 
 #[cfg(any(feature = "static", doc))]
 #[doc(cfg(feature = "static"))]
-/// A type whose implementations can be dynamically determined using [`DB`].
+/// A type whose implementations can be dynamically determined using the global
+/// [`DB`].
 pub trait StaticDynImplements<'a>
 where
     Self: Coercible<'a>,
 {
-    /// Lookup whether `self`'s ultimate concrete type implements `U` in [`DB`].
+    /// Lookup whether `self`'s ultimate concrete type implements `U` in the
+    /// global [`DB`].
     fn dyn_implements<U>(&self) -> bool
     where
         U: 'static + ?Sized,
@@ -172,14 +174,14 @@ where
 
 #[cfg(any(feature = "static", doc))]
 #[doc(cfg(feature = "static"))]
-/// A type that can be dynamically downcast using [`DB`].
+/// A type that can be dynamically downcast using the global [`DB`].
 pub trait StaticDynCast<'a>
 where
     Self: Pointer<'a>,
     Self::Target: Coercible<'a>,
 {
     /// Downcast `self`'s ultimate concrete type to `U`, if registered as an
-    /// implementor of `U` in [`DB`].
+    /// implementor of `U` in the global [`DB`].
     fn dyn_cast<U>(self) -> Result<Self::Coerced<U>, Self>
     where
         U: 'static + ?Sized,
