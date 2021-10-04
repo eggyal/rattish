@@ -6,6 +6,9 @@ use std::{
     collections::HashMap,
 };
 
+#[cfg(any(feature = "static", doc))]
+use std::lazy::SyncOnceCell;
+
 /// A [`TypeDatabase`] backed by a [`HashMap`].
 #[derive(Default)]
 #[doc(cfg(feature = "std"))]
@@ -40,6 +43,21 @@ macro_rules! rtti {
             $(entry.register::<$ty>();)+
         )+
         db
+    }};
+}
+
+/// An immutable, thread-safe [`HashMapTypeDatabase`].
+#[cfg(any(feature = "static", doc))]
+#[doc(cfg(feature = "static"))]
+pub static DB: SyncOnceCell<HashMapTypeDatabase> = SyncOnceCell::new();
+
+/// Instantiates [`DB`] with the provided entries.
+#[macro_export]
+#[cfg(any(feature = "static", doc))]
+#[doc(cfg(feature = "static"))]
+macro_rules! rtti_static {
+    ($( $token:tt )+) => {{
+        $crate::db::hash_map::DB.set($crate::rtti!($($token)+)).ok().expect("uninitialized database");
     }};
 }
 
