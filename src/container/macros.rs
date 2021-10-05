@@ -21,6 +21,19 @@ macro_rules! coercible_trait {
 macro_rules! coercibles {
     (
         <$lt:lifetime, $t:ident, $u:ident>($self:ident, $metadata:ident) {
+            $(#[$feature:literal])? $ty:ty => $coerced:ty $($coerce:block)? as _,
+            $($rest:tt)*
+        }
+    ) => {
+        coercibles! {
+            <$lt, $t, $u>($self, $metadata) {
+                $(#[$feature])? $ty => $coerced $($coerce)? as { (**$self).innermost_type_id() },
+                $($rest)*
+            }
+        }
+    };
+    (
+        <$lt:lifetime, $t:ident, $u:ident>($self:ident, $metadata:ident) {
             $(#[$feature:literal])? $ty:ty => $coerced:ty $($coerce:block)? as $type:block,
             $($rest:tt)*
         }
@@ -39,19 +52,6 @@ macro_rules! coercibles {
         coercibles! {
             <$lt, $t, $u>($self, $metadata) {
                 $(#[$feature])? $ty => $coerced $($coerce)?,
-                $($rest)*
-            }
-        }
-    };
-    (
-        <$lt:lifetime, $t:ident, $u:ident>($self:ident, $metadata:ident) {
-            $(#[$feature:literal])? $ty:ty => $coerced:ty $($coerce:block)? as _,
-            $($rest:tt)*
-        }
-    ) => {
-        coercibles! {
-            <$lt, $t, $u>($self, $metadata) {
-                $(#[$feature])? $ty => $coerced $($coerce)? as { (**$self).innermost_type_id() },
                 $($rest)*
             }
         }
