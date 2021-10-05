@@ -67,7 +67,7 @@ pub unsafe trait InnermostTypeId {
 }
 
 /// A pointer-type to a [`Coercible`].
-pub trait Pointer<'a>
+pub trait Pointer
 where
     Self: Coercible + Sized,
 {

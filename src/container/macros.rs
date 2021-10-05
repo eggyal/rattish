@@ -87,7 +87,7 @@ macro_rules! pointers {
             #[cfg(any(feature = $feature, doc))]
             #[doc(cfg(feature = $feature))]
         )?
-        impl<$lt, $x> $crate::container::Pointer<$lt> for $ty
+        impl<$lt, $x> $crate::container::Pointer for $ty
         where
             $x: ?::core::marker::Sized + $crate::container::Coercible,
         {

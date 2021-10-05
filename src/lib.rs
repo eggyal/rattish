@@ -122,7 +122,7 @@ where
 /// A type that can be dynamically cast.
 pub trait DynCast<'a, DB>
 where
-    Self: Pointer<'a> + InnermostTypeId,
+    Self: Pointer + InnermostTypeId,
     Self::Target: Coercible,
     DB: TypeDatabase,
 {
@@ -150,7 +150,7 @@ where
 
 impl<'a, DB, P> DynCast<'a, DB> for P
 where
-    Self: Pointer<'a> + InnermostTypeId,
+    Self: Pointer + InnermostTypeId,
     Self::Target: Coercible,
     DB: TypeDatabase,
 {
@@ -179,7 +179,7 @@ where
 /// A type that can be dynamically cast using the global [`DB`].
 pub trait GlobalDynCast<'a>
 where
-    Self: Pointer<'a> + InnermostTypeId,
+    Self: Pointer + InnermostTypeId,
     Self::Target: Coercible,
 {
     /// Cast `self`'s ultimate concrete type to `U`, if registered as an
@@ -202,7 +202,7 @@ impl<'a, P> GlobalDynImplements<'a> for P where Self: InnermostTypeId {}
 #[doc(cfg(feature = "static"))]
 impl<'a, P> GlobalDynCast<'a> for P
 where
-    Self: Pointer<'a> + InnermostTypeId,
+    Self: Pointer + InnermostTypeId,
     Self::Target: Coercible,
 {
 }

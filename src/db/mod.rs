@@ -66,7 +66,7 @@ where
     /// `U`.
     fn cast<'a, P>(&self, pointer: P) -> Result<P::Coerced<U>, P>
     where
-        P: Pointer<'a> + InnermostTypeId,
+        P: Pointer + InnermostTypeId,
         P::Coerced<U>: Sized,
         P::Target: Coercible,
         Coerced<P::Target, U>: ptr::Pointee<Metadata = Metadata<U>>,
