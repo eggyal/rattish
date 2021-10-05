@@ -36,7 +36,7 @@ coercibles! {
     <'a, T, U>(self) {
         &'a T => &'a T::Coerced<U>,
         &'a mut T => &'a mut T::Coerced<U>,
-        RefCell<T> => RefCell<T::Coerced<U>> { (&*self.borrow()).innermost_type_id() },
+        RefCell<T> => RefCell<T::Coerced<U>> { (*self.borrow()).innermost_type_id() },
         Ref<'a, T> => Ref<'a, T::Coerced<U>>,
         RefMut<'a, T> => RefMut<'a, T::Coerced<U>>,
         #["alloc"] Box<T> => Box<T::Coerced<U>>,
