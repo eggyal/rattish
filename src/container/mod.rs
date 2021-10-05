@@ -75,7 +75,7 @@ pub unsafe trait InnermostTypeId {
     /// Unless `Self` is a leaf, such as a `dyn Trait` (in which case this
     /// should delegate to a trait method), this should just delegate to the
     /// contained type's `innermost_type_id`.
-    fn innermost_type_id(&self) -> TypeId;
+    fn innermost_type_id(&self) -> Option<TypeId>;
 }
 
 /// A [`Sized`] type that inherits [`Pointee::Metadata`][ptr::Pointee::Metadata]

@@ -11,8 +11,8 @@ macro_rules! coercible_trait {
         }
 
         unsafe impl $crate::container::InnermostTypeId for dyn $trait {
-            fn innermost_type_id(&self) -> ::core::any::TypeId {
-                ::core::any::Any::type_id(self)
+            fn innermost_type_id(&self) -> Option<::core::any::TypeId> {
+                Some(::core::any::Any::type_id(self))
             }
         }
     };
@@ -46,7 +46,7 @@ macro_rules! coercibles {
         where
             $t: ?::core::marker::Sized + $crate::container::InnermostTypeId,
         {
-            fn innermost_type_id(&$self) -> ::core::any::TypeId $type
+            fn innermost_type_id(&$self) -> Option<::core::any::TypeId> $type
         }
 
         coercibles! {

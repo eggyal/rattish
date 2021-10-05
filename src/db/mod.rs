@@ -59,7 +59,10 @@ where
     where
         P: InnermostTypeId,
     {
-        self.contains(data.innermost_type_id())
+        match data.innermost_type_id() {
+            Some(type_id) => self.contains(type_id),
+            None => false,
+        }
     }
 
     /// Cast `pointer` to `P::Coerced<U>`, if registered as an implementor of
@@ -72,7 +75,10 @@ where
         Coerced<P::Inner, U>: ptr::Pointee<Metadata = Metadata<U>>,
     {
         unsafe {
-            match self.metadata(pointer.innermost_type_id()) {
+            match pointer
+                .innermost_type_id()
+                .and_then(|type_id| self.metadata(type_id))
+            {
                 Some(&metadata) => Ok(pointer.coerce(metadata)),
                 None => Err(pointer),
             }
