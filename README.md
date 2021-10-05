@@ -8,14 +8,14 @@ manually.
 
 rattish is presently only experimental, and depends on unstable compiler
 features including [`generic_associated_types`], [`ptr_metadata`] and
-[`unsize`]; [`once_cell`] is used by [`DB`] (enabled by the `static`
+[`unsize`]; [`once_cell`] is used by [`DB`] (enabled by the `global`
 feature).  Accordingly, a nightly toolchain is required.
 
 ## Example
 ```rust
 #![feature(generic_associated_types, once_cell)]
 
-use rattish::{coercible_trait, rtti_static, GlobalDynCast};
+use rattish::{coercible_trait, rtti_global, GlobalDynCast};
 use std::{any::Any, cell::RefCell, fmt, rc::Rc};
 
 // Casting from an object of trait Foo requires Foo to have
@@ -43,7 +43,7 @@ fn main() {
     // ..except that Bar must be registered in the database with
     // each implementing (concrete) type that might underlie a
     // dynamic cast to one of its objects
-    rtti_static! {
+    rtti_global! {
         Bar: Qux,
 
         // example of another trait with multiple implementations

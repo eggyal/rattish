@@ -1,5 +1,5 @@
 #![cfg_attr(not(any(feature = "std", doc)), no_std)]
-#![cfg_attr(any(feature = "static", doc), feature(once_cell))]
+#![cfg_attr(any(feature = "global", doc), feature(once_cell))]
 #![feature(doc_cfg, generic_associated_types, ptr_metadata, unsize)]
 #![deny(missing_docs)]
 
@@ -11,16 +11,16 @@
 //!
 //! rattish is presently only experimental, and depends on unstable compiler
 //! features including [`generic_associated_types`], [`ptr_metadata`] and
-//! [`unsize`]; [`once_cell`] is used by [`DB`] (enabled by the `static`
+//! [`unsize`]; [`once_cell`] is used by [`DB`] (enabled by the `global`
 //! feature).  Accordingly, a nightly toolchain is required.
 //!
 //! # Example
 //! ```rust
 //! #![feature(generic_associated_types, once_cell)]
-//! # #[cfg(feature = "static")]
+//! # #[cfg(feature = "global")]
 //! # {
 //!
-//! use rattish::{coercible_trait, rtti_static, GlobalDynCast};
+//! use rattish::{coercible_trait, rtti_global, GlobalDynCast};
 //! use std::{any::Any, cell::RefCell, fmt, rc::Rc};
 //!
 //! // Casting from an object of trait Foo requires Foo to have
@@ -48,7 +48,7 @@
 //!     // ..except that Bar must be registered in the database with
 //!     // each implementing (concrete) type that might underlie a
 //!     // dynamic cast to one of its objects
-//!     rtti_static! {
+//!     rtti_global! {
 //!         Bar: Qux,
 //!
 //!         // example of another trait with multiple implementations
@@ -99,7 +99,7 @@ use container::{Coerced, Coercible, InnermostTypeId, Metadata, Pointer};
 use core::ptr;
 use db::{TypeDatabase, TypeDatabaseEntryExt};
 
-#[cfg(any(feature = "static", doc))]
+#[cfg(any(feature = "global", doc))]
 use db::hash_map::DB;
 
 /// A type whose implementations can be dynamically determined.
@@ -156,8 +156,8 @@ where
 {
 }
 
-#[cfg(any(feature = "static", doc))]
-#[doc(cfg(feature = "static"))]
+#[cfg(any(feature = "global", doc))]
+#[doc(cfg(feature = "global"))]
 /// A type whose implementations can be dynamically determined using the global
 /// [`DB`].
 pub trait GlobalDynImplements<'a>
@@ -174,8 +174,8 @@ where
     }
 }
 
-#[cfg(any(feature = "static", doc))]
-#[doc(cfg(feature = "static"))]
+#[cfg(any(feature = "global", doc))]
+#[doc(cfg(feature = "global"))]
 /// A type that can be dynamically cast using the global [`DB`].
 pub trait GlobalDynCast<'a>
 where
@@ -194,12 +194,12 @@ where
     }
 }
 
-#[cfg(any(feature = "static", doc))]
-#[doc(cfg(feature = "static"))]
+#[cfg(any(feature = "global", doc))]
+#[doc(cfg(feature = "global"))]
 impl<'a, P> GlobalDynImplements<'a> for P where Self: InnermostTypeId {}
 
-#[cfg(any(feature = "static", doc))]
-#[doc(cfg(feature = "static"))]
+#[cfg(any(feature = "global", doc))]
+#[doc(cfg(feature = "global"))]
 impl<'a, P> GlobalDynCast<'a> for P
 where
     Self: Pointer + InnermostTypeId,
