@@ -73,7 +73,7 @@ where
     {
         unsafe {
             match self.metadata(pointer.innermost_type_id()) {
-                Some(&metadata) => Ok(P::coerce(pointer, metadata)),
+                Some(&metadata) => Ok(pointer.coerce(metadata)),
                 None => Err(pointer),
             }
         }
