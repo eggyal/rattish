@@ -80,8 +80,9 @@
 //!
 //! # Extending rattish to additional pointer/wrapper types
 //!
-//! You will need to implement [`Coercible`] for your type; and also [`Pointer`]
-//! if your type is a pointer-type (that is, if it is `Sized + Deref`).
+//! You will need to implement [`Coercible`] and [`InnermostTypeId`] for
+//! your type; and also [`Pointer`] if your type is a pointer-type (that
+//! is, if it is `Sized + Deref`).
 //!
 //! [`generic_associated_types`]: https://doc.rust-lang.org/nightly/unstable-book/language-features/generic-associated-types.html
 //! [`once_cell`]: https://doc.rust-lang.org/nightly/unstable-book/library-features/once-cell.html

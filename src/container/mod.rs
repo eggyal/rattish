@@ -58,7 +58,7 @@ pub type Coerced<T: Coercible, U> = T::Coerced<U>;
 /// implemented.
 pub unsafe trait InnermostTypeId {
     /// Returns the [`TypeId`] of the *concrete* value underlying
-    /// [`<Self as ptr::Pointee>::Metadata`].
+    /// [`<Self as ptr::Pointee>::Metadata`][ptr::Pointee::Metadata].
     ///
     /// Unless `Self` is a leaf, such as a `dyn Trait` (in which case this
     /// should delegate to a trait method), this should just delegate to the
