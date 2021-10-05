@@ -123,7 +123,7 @@ where
 pub trait DynCast<'a, DB>
 where
     Self: Pointer + InnermostTypeId,
-    Self::Target: Coercible,
+    Self::Inner: Coercible,
     DB: TypeDatabase,
 {
     /// Cast `self`'s ultimate concrete type to `U`, if registered as an
@@ -132,7 +132,7 @@ where
     where
         U: 'static + ?Sized,
         Self::Coerced<U>: Sized,
-        Coerced<Self::Target, U>: ptr::Pointee<Metadata = Metadata<U>>,
+        Coerced<Self::Inner, U>: ptr::Pointee<Metadata = Metadata<U>>,
     {
         match db.get_entry() {
             Some(entry) => entry.cast(self),
@@ -151,7 +151,7 @@ where
 impl<'a, DB, P> DynCast<'a, DB> for P
 where
     Self: Pointer + InnermostTypeId,
-    Self::Target: Coercible,
+    Self::Inner: Coercible,
     DB: TypeDatabase,
 {
 }
@@ -180,7 +180,7 @@ where
 pub trait GlobalDynCast<'a>
 where
     Self: Pointer + InnermostTypeId,
-    Self::Target: Coercible,
+    Self::Inner: Coercible,
 {
     /// Cast `self`'s ultimate concrete type to `U`, if registered as an
     /// implementor of `U` in the global [`DB`].
@@ -188,7 +188,7 @@ where
     where
         U: 'static + ?Sized,
         Self::Coerced<U>: Sized,
-        Coerced<Self::Target, U>: ptr::Pointee<Metadata = Metadata<U>>,
+        Coerced<Self::Inner, U>: ptr::Pointee<Metadata = Metadata<U>>,
     {
         DynCast::dyn_cast::<U>(self, DB.get().expect("initialized database"))
     }
@@ -203,6 +203,6 @@ impl<'a, P> GlobalDynImplements<'a> for P where Self: InnermostTypeId {}
 impl<'a, P> GlobalDynCast<'a> for P
 where
     Self: Pointer + InnermostTypeId,
-    Self::Target: Coercible,
+    Self::Inner: Coercible,
 {
 }

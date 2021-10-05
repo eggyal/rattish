@@ -34,6 +34,10 @@ pub unsafe trait Coercible {
     /// A `dyn Trait` will generally just become `U`.
     type Coerced<U: 'static + ?Sized>: ?Sized;
 
+    /// Basically the same as [`Deref::Target`][core::ops::Deref::Target], but
+    /// without any dereferencing so is safe for raw pointers too.
+    type Inner: ?Sized + Coercible;
+
     /// The ultimate type whose
     /// [`Pointee::Metadata`][ptr::Pointee::Metadata] is that of `Self`.  For
     /// example, if `Self::Metadata` is [`DynMetadata<T>`][ptr::DynMetadata],
@@ -71,15 +75,11 @@ pub trait Pointer
 where
     Self: Coercible + Sized,
 {
-    /// Basically the same as [`Deref::Target`][core::ops::Deref::Target], but
-    /// without any dereferencing so is safe for raw pointers too.
-    type Target: ?Sized + Coercible;
-
     /// Perform the coercion.
     ///
     /// # Safety
-    /// `metadata` must be correct for `Self::Target`.
-    unsafe fn coerce<U>(self, metadata: Metadata<Coerced<Self::Target, U>>) -> Self::Coerced<U>
+    /// `metadata` must be correct for `Self::Inner`.
+    unsafe fn coerce<U>(self, metadata: Metadata<Coerced<Self::Inner, U>>) -> Self::Coerced<U>
     where
         U: ?Sized,
         Self::Coerced<U>: Sized;

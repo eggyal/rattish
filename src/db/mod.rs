@@ -68,8 +68,8 @@ where
     where
         P: Pointer + InnermostTypeId,
         P::Coerced<U>: Sized,
-        P::Target: Coercible,
-        Coerced<P::Target, U>: ptr::Pointee<Metadata = Metadata<U>>,
+        P::Inner: Coercible,
+        Coerced<P::Inner, U>: ptr::Pointee<Metadata = Metadata<U>>,
     {
         unsafe {
             match self.metadata(pointer.innermost_type_id()) {

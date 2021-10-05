@@ -6,6 +6,7 @@ macro_rules! coercible_trait {
     ($trait:path) => {
         unsafe impl $crate::container::Coercible for dyn $trait {
             type Coerced<U: 'static + ?::core::marker::Sized> = U;
+            type Inner = Self;
             type Innermost = Self;
         }
 
@@ -65,6 +66,7 @@ macro_rules! coercibles {
             $x: ?::core::marker::Sized + $crate::container::Coercible,
         {
             type Coerced<$u: 'static + ?::core::marker::Sized> = $coerced;
+            type Inner = $x;
             type Innermost = $x::Innermost;
         }
 
@@ -91,9 +93,7 @@ macro_rules! pointers {
         where
             $x: ?::core::marker::Sized + $crate::container::Coercible,
         {
-            type Target = $x;
-
-            unsafe fn coerce<U>($self, $metadata: $crate::container::Metadata<$crate::container::Coerced<Self::Target, U>>) -> Self::Coerced<U>
+            unsafe fn coerce<U>($self, $metadata: $crate::container::Metadata<$crate::container::Coerced<Self::Inner, U>>) -> Self::Coerced<U>
             where
                 U: ?::core::marker::Sized,
                 Self::Coerced<U>: ::core::marker::Sized,
