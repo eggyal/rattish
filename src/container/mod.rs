@@ -18,7 +18,7 @@ pub type Metadata<U> = <U as ptr::Pointee>::Metadata;
 /// # Safety
 /// The safety of unsafe code in rattish depends upon this trait being correctly
 /// implemented.
-pub unsafe trait Coercible<'a> {
+pub unsafe trait Coercible {
     /// The type that `Self` will become if the contained type is coerced to
     /// `U`.
     ///
@@ -26,12 +26,12 @@ pub unsafe trait Coercible<'a> {
     /// presently rendered by Rustdoc.  Its full declaration is:
     ///
     /// ```ignore
-    /// type Coerced<U: 'a + ?Sized>: 'a + ?Sized
+    /// type Coerced<U: 'static + ?Sized>: ?Sized
     /// ```
     ///
     /// For example: `&mut T` becomes `&mut U`, `Box<T>` becomes `Box<U>`, etc.
     /// A `dyn Trait` will generally just become `U`.
-    type Coerced<U: 'a + ?Sized>: 'a + ?Sized;
+    type Coerced<U: 'static + ?Sized>: ?Sized;
 
     /// The ultimate type whose
     /// [`Pointee::Metadata`][ptr::Pointee::Metadata] is that of `Self`.  For
@@ -52,40 +52,21 @@ pub unsafe trait Coercible<'a> {
     fn innermost_type_id(&self) -> TypeId;
 }
 
-/// The type that `X` will become if its contained type is coerced to `Y`.
+/// The type that `T` will become if its contained type is coerced to `U`.
 #[allow(type_alias_bounds)]
-pub type Coerced<'a, X: Coercible<'a>, Y> = X::Coerced<Y>;
-
-/// Reference coercion.
-pub trait Coerce {
-    /// Perform the coercion.
-    ///
-    /// # Safety
-    /// `metadata` must be correct for `Self`.
-    unsafe fn coerce_ref<U>(&self, metadata: Metadata<U>) -> &U
-    where
-        U: ?Sized;
-
-    /// Perform the coercion.
-    ///
-    /// # Safety
-    /// `metadata` must be correct for `Self`.
-    unsafe fn coerce_mut<U>(&mut self, metadata: Metadata<U>) -> &mut U
-    where
-        U: ?Sized;
-}
+pub type Coerced<T: Coercible, U> = T::Coerced<U>;
 
 /// A pointer-type to a [`Coercible`].
 pub trait Pointer<'a>
 where
-    Self: Coercible<'a> + Deref + Sized,
-    Self::Target: Coercible<'a>,
+    Self: Coercible + Deref + Sized,
+    Self::Target: Coercible,
 {
     /// Perform the coercion.
     ///
     /// # Safety
     /// `metadata` must be correct for `Self::Target`.
-    unsafe fn coerce<U>(self, metadata: Metadata<Coerced<'a, Self::Target, U>>) -> Self::Coerced<U>
+    unsafe fn coerce<U>(self, metadata: Metadata<Coerced<Self::Target, U>>) -> Self::Coerced<U>
     where
         U: ?Sized,
         Self::Coerced<U>: Sized;

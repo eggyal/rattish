@@ -57,7 +57,7 @@ where
     /// Whether `data` is registered as an implementor of `U`.
     fn implements<'a, P>(&self, data: P) -> bool
     where
-        P: Coercible<'a>,
+        P: Coercible,
     {
         self.contains(data.innermost_type_id())
     }
@@ -68,8 +68,8 @@ where
     where
         P: Pointer<'a>,
         P::Coerced<U>: Sized,
-        P::Target: Coercible<'a>,
-        Coerced<'a, P::Target, U>: ptr::Pointee<Metadata = Metadata<U>>,
+        P::Target: Coercible,
+        Coerced<P::Target, U>: ptr::Pointee<Metadata = Metadata<U>>,
     {
         unsafe {
             match self.metadata(pointer.innermost_type_id()) {

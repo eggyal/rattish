@@ -103,7 +103,7 @@ use db::hash_map::DB;
 /// A type whose implementations can be dynamically determined.
 pub trait DynImplements<'a, DB>
 where
-    Self: Coercible<'a>,
+    Self: Coercible,
     DB: TypeDatabase,
 {
     /// Lookup whether `self`'s ultimate concrete type implements `U` in `db`.
@@ -121,7 +121,7 @@ where
 pub trait DynCast<'a, DB>
 where
     Self: Pointer<'a>,
-    Self::Target: Coercible<'a>,
+    Self::Target: Coercible,
     DB: TypeDatabase,
 {
     /// Downcast `self`'s ultimate concrete type to `U`, if registered as an
@@ -130,7 +130,7 @@ where
     where
         U: 'static + ?Sized,
         Self::Coerced<U>: Sized,
-        Coerced<'a, Self::Target, U>: ptr::Pointee<Metadata = Metadata<U>>,
+        Coerced<Self::Target, U>: ptr::Pointee<Metadata = Metadata<U>>,
     {
         match db.get_entry() {
             Some(entry) => entry.downcast(self),
@@ -141,7 +141,7 @@ where
 
 impl<'a, DB, P: ?Sized> DynImplements<'a, DB> for P
 where
-    Self: Coercible<'a>,
+    Self: Coercible,
     DB: TypeDatabase,
 {
 }
@@ -149,7 +149,7 @@ where
 impl<'a, DB, P> DynCast<'a, DB> for P
 where
     Self: Pointer<'a>,
-    Self::Target: Coercible<'a>,
+    Self::Target: Coercible,
     DB: TypeDatabase,
 {
 }
@@ -160,7 +160,7 @@ where
 /// [`DB`].
 pub trait StaticDynImplements<'a>
 where
-    Self: Coercible<'a>,
+    Self: Coercible,
 {
     /// Lookup whether `self`'s ultimate concrete type implements `U` in the
     /// global [`DB`].
@@ -178,7 +178,7 @@ where
 pub trait StaticDynCast<'a>
 where
     Self: Pointer<'a>,
-    Self::Target: Coercible<'a>,
+    Self::Target: Coercible,
 {
     /// Downcast `self`'s ultimate concrete type to `U`, if registered as an
     /// implementor of `U` in the global [`DB`].
@@ -186,7 +186,7 @@ where
     where
         U: 'static + ?Sized,
         Self::Coerced<U>: Sized,
-        Coerced<'a, Self::Target, U>: ptr::Pointee<Metadata = Metadata<U>>,
+        Coerced<Self::Target, U>: ptr::Pointee<Metadata = Metadata<U>>,
     {
         DynCast::dyn_cast::<U>(self, DB.get().expect("initialized database"))
     }
@@ -194,13 +194,13 @@ where
 
 #[cfg(any(feature = "static", doc))]
 #[doc(cfg(feature = "static"))]
-impl<'a, P> StaticDynImplements<'a> for P where Self: Coercible<'a> {}
+impl<'a, P> StaticDynImplements<'a> for P where Self: Coercible {}
 
 #[cfg(any(feature = "static", doc))]
 #[doc(cfg(feature = "static"))]
 impl<'a, P> StaticDynCast<'a> for P
 where
     Self: Pointer<'a>,
-    Self::Target: Coercible<'a>,
+    Self::Target: Coercible,
 {
 }
