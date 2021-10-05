@@ -1,6 +1,14 @@
-//! Descriptions of types that inherit
+//! Traits that describe types that inherit
 //! [`Pointee::Metadata`][ptr::Pointee::Metadata] from a contained type, and how
 //! to coerce them.
+//!
+//! All cases should implement [`Coercible`]; anything that can dereference its
+//! contained type (which should be every [`Coercible`] except raw pointers)
+//! should also implement [`InnermostTypeId`]; and anything that is a
+//! pointer-type (which should be every [`Coercible`] that is [`Sized`]) should
+//! also implement [`Pointer`].
+//!
+//! Implementations are provided for standard library types.
 
 #[macro_use]
 mod macros;
@@ -12,9 +20,8 @@ use core::{any::TypeId, ptr};
 pub type Metadata<U> = <U as ptr::Pointee>::Metadata;
 
 /// A type that inherits [`Pointee::Metadata`][ptr::Pointee::Metadata]
-/// from a contained type, and whose pointers are therefore coercible if that
-/// contained type is coercible.  Similar semantics as [`InnermostTypeId`]
-/// except also safe for raw pointers.
+/// from a contained type, pointers to which are therefore coercible if that
+/// contained type is coercible.
 ///
 /// # Safety
 /// The safety of unsafe code in rattish depends upon this trait being correctly
@@ -53,9 +60,10 @@ pub unsafe trait Coercible {
 #[allow(type_alias_bounds)]
 pub type Coerced<T: Coercible, U> = T::Coerced<U>;
 
-/// A type that inherits [`Pointee::Metadata`][ptr::Pointee::Metadata]
-/// from a contained type, and whose pointers are therefore coercible if that
-/// contained type is coercible.
+/// A dereferenceable type that inherits
+/// [`Pointee::Metadata`][ptr::Pointee::Metadata] from a contained type,
+/// pointers to which are therefore coercible if that contained type is
+/// coercible.
 ///
 /// # Safety
 /// The safety of unsafe code in rattish depends upon this trait being correctly
@@ -70,12 +78,16 @@ pub unsafe trait InnermostTypeId {
     fn innermost_type_id(&self) -> TypeId;
 }
 
-/// A pointer-type to a [`Coercible`].
+/// A [`Sized`] type that inherits [`Pointee::Metadata`][ptr::Pointee::Metadata]
+/// from a contained type, and therefore is a "pointer" to that type; as such,
+/// it is coercible if that contained type is coercible.
 pub trait Pointer
 where
     Self: Coercible + Sized,
 {
-    /// Perform the coercion.
+    /// Perform the coercion.  In most cases this will utilise the [`Pointer`]
+    /// implementation for some more primitive type, e.g. a reference or a raw
+    /// pointer.
     ///
     /// # Safety
     /// `metadata` must be correct for `Self::Inner`.
