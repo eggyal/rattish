@@ -62,9 +62,9 @@ where
         self.contains(data.innermost_type_id())
     }
 
-    /// Downcast `pointer` to `P::Coerced<U>`, if registered as an implementor
-    /// of `U`.
-    fn downcast<'a, P>(&self, pointer: P) -> Result<P::Coerced<U>, P>
+    /// Cast `pointer` to `P::Coerced<U>`, if registered as an implementor of
+    /// `U`.
+    fn cast<'a, P>(&self, pointer: P) -> Result<P::Coerced<U>, P>
     where
         P: Pointer<'a> + InnermostTypeId,
         P::Coerced<U>: Sized,

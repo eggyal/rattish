@@ -20,13 +20,14 @@
 //! # #[cfg(feature = "static")]
 //! # {
 //!
-//! use rattish::{coercible_trait, rtti_static, StaticDynCast};
+//! use rattish::{coercible_trait, rtti_static, GlobalDynCast};
 //! use std::{any::Any, cell::RefCell, fmt, rc::Rc};
 //!
 //! // Casting from an object of trait Foo requires Foo to have
 //! // super-trait Any..
 //! trait Foo: Any {}
-//! // ..and that Foo implements Coercible, for which there is a macro:
+//! // ..and that Foo implements both Coercible and InnermostTypeId,
+//! // for which there is a macro:
 //! coercible_trait!(Foo);
 //!
 //! // Casting to an object of trait Bar does not require anything
@@ -117,14 +118,14 @@ where
     }
 }
 
-/// A type that can be dynamically downcast.
+/// A type that can be dynamically cast.
 pub trait DynCast<'a, DB>
 where
     Self: Pointer<'a> + InnermostTypeId,
     Self::Target: Coercible,
     DB: TypeDatabase,
 {
-    /// Downcast `self`'s ultimate concrete type to `U`, if registered as an
+    /// Cast `self`'s ultimate concrete type to `U`, if registered as an
     /// implementor of `U` in `db`.
     fn dyn_cast<U>(self, db: &DB) -> Result<Self::Coerced<U>, Self>
     where
@@ -133,7 +134,7 @@ where
         Coerced<Self::Target, U>: ptr::Pointee<Metadata = Metadata<U>>,
     {
         match db.get_entry() {
-            Some(entry) => entry.downcast(self),
+            Some(entry) => entry.cast(self),
             None => Err(self),
         }
     }
@@ -158,7 +159,7 @@ where
 #[doc(cfg(feature = "static"))]
 /// A type whose implementations can be dynamically determined using the global
 /// [`DB`].
-pub trait StaticDynImplements<'a>
+pub trait GlobalDynImplements<'a>
 where
     Self: InnermostTypeId,
 {
@@ -174,13 +175,13 @@ where
 
 #[cfg(any(feature = "static", doc))]
 #[doc(cfg(feature = "static"))]
-/// A type that can be dynamically downcast using the global [`DB`].
-pub trait StaticDynCast<'a>
+/// A type that can be dynamically cast using the global [`DB`].
+pub trait GlobalDynCast<'a>
 where
     Self: Pointer<'a> + InnermostTypeId,
     Self::Target: Coercible,
 {
-    /// Downcast `self`'s ultimate concrete type to `U`, if registered as an
+    /// Cast `self`'s ultimate concrete type to `U`, if registered as an
     /// implementor of `U` in the global [`DB`].
     fn dyn_cast<U>(self) -> Result<Self::Coerced<U>, Self>
     where
@@ -194,11 +195,11 @@ where
 
 #[cfg(any(feature = "static", doc))]
 #[doc(cfg(feature = "static"))]
-impl<'a, P> StaticDynImplements<'a> for P where Self: InnermostTypeId {}
+impl<'a, P> GlobalDynImplements<'a> for P where Self: InnermostTypeId {}
 
 #[cfg(any(feature = "static", doc))]
 #[doc(cfg(feature = "static"))]
-impl<'a, P> StaticDynCast<'a> for P
+impl<'a, P> GlobalDynCast<'a> for P
 where
     Self: Pointer<'a> + InnermostTypeId,
     Self::Target: Coercible,

@@ -15,13 +15,14 @@ feature).  Accordingly, a nightly toolchain is required.
 ```rust
 #![feature(generic_associated_types, once_cell)]
 
-use rattish::{coercible_trait, rtti_static, StaticDynCast};
+use rattish::{coercible_trait, rtti_static, GlobalDynCast};
 use std::{any::Any, cell::RefCell, fmt, rc::Rc};
 
 // Casting from an object of trait Foo requires Foo to have
 // super-trait Any..
 trait Foo: Any {}
-// ..and that Foo implements Coercible, for which there is a macro:
+// ..and that Foo implements both Coercible and InnermostTypeId,
+// for which there is a macro:
 coercible_trait!(Foo);
 
 // Casting to an object of trait Bar does not require anything
