@@ -11,6 +11,8 @@ coercible_trait!(Any);
 
 coercibles! {
     <'a, T, U>(self) {
+        *const T => *const T::Coerced<U> {},
+        *mut T => *mut T::Coerced<U> {},
         &'a T => &'a T::Coerced<U>,
         &'a mut T => &'a mut T::Coerced<U>,
         RefCell<T> => RefCell<T::Coerced<U>> { self.borrow().innermost_type_id() },
@@ -24,20 +26,32 @@ coercibles! {
 
 pointers! {
     <'a, T>(self, metadata) {
+        *const T {
+            ptr::from_raw_parts(self.cast(), metadata)
+        }
+        *mut T {
+            ptr::from_raw_parts_mut(self.cast(), metadata)
+        }
         &'a T {
-            let data_address = (self as *const T).cast();
-            let ptr = ptr::from_raw_parts(data_address, metadata);
-            &*ptr
+            &*(self as *const T).coerce(metadata)
         }
         &'a mut T {
-            let data_address = (self as *mut T).cast();
-            let ptr = ptr::from_raw_parts_mut(data_address, metadata);
-            &mut *ptr
+            &mut *(self as *mut T).coerce(metadata)
         }
-        Ref<'a, T> { Ref::map(self, |r| r.coerce(metadata)) }
-        RefMut<'a, T> { RefMut::map(self, |r| r.coerce(metadata)) }
-        #["alloc"] Box<T> { Box::from_raw(Box::leak(self).coerce(metadata)) }
-        #["alloc"] Rc<T> { Rc::from_raw((&*Rc::into_raw(self)).coerce(metadata)) }
-        #["alloc"] Arc<T> { Arc::from_raw((&*Arc::into_raw(self)).coerce(metadata)) }
+        Ref<'a, T> {
+            Ref::map(self, |r| r.coerce(metadata))
+        }
+        RefMut<'a, T> {
+            RefMut::map(self, |r| r.coerce(metadata))
+        }
+        #["alloc"] Box<T> {
+            Box::from_raw(Box::into_raw(self).coerce(metadata))
+        }
+        #["alloc"] Rc<T> {
+            Rc::from_raw(Rc::into_raw(self).coerce(metadata))
+        }
+        #["alloc"] Arc<T> {
+            Arc::from_raw(Arc::into_raw(self).coerce(metadata))
+        }
     }
 }

@@ -4,7 +4,7 @@
 #[doc(cfg(feature = "std"))]
 pub mod hash_map;
 
-use crate::container::{Coerced, Coercible, Metadata, Pointer};
+use crate::container::{Coerced, Coercible, InnermostTypeId, Metadata, Pointer};
 use core::{any::TypeId, marker::Unsize, ptr};
 
 /// A key-value store, where the key is the [`TypeId`] of a concrete Rust type
@@ -57,7 +57,7 @@ where
     /// Whether `data` is registered as an implementor of `U`.
     fn implements<'a, P>(&self, data: P) -> bool
     where
-        P: Coercible,
+        P: InnermostTypeId,
     {
         self.contains(data.innermost_type_id())
     }
@@ -66,7 +66,7 @@ where
     /// of `U`.
     fn downcast<'a, P>(&self, pointer: P) -> Result<P::Coerced<U>, P>
     where
-        P: Pointer<'a>,
+        P: Pointer<'a> + InnermostTypeId,
         P::Coerced<U>: Sized,
         P::Target: Coercible,
         Coerced<P::Target, U>: ptr::Pointee<Metadata = Metadata<U>>,

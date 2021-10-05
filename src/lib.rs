@@ -93,7 +93,7 @@ extern crate alloc;
 pub mod container;
 pub mod db;
 
-use container::{Coerced, Coercible, Metadata, Pointer};
+use container::{Coerced, Coercible, InnermostTypeId, Metadata, Pointer};
 use core::ptr;
 use db::{TypeDatabase, TypeDatabaseEntryExt};
 
@@ -103,7 +103,7 @@ use db::hash_map::DB;
 /// A type whose implementations can be dynamically determined.
 pub trait DynImplements<'a, DB>
 where
-    Self: Coercible,
+    Self: InnermostTypeId,
     DB: TypeDatabase,
 {
     /// Lookup whether `self`'s ultimate concrete type implements `U` in `db`.
@@ -120,7 +120,7 @@ where
 /// A type that can be dynamically downcast.
 pub trait DynCast<'a, DB>
 where
-    Self: Pointer<'a>,
+    Self: Pointer<'a> + InnermostTypeId,
     Self::Target: Coercible,
     DB: TypeDatabase,
 {
@@ -141,14 +141,14 @@ where
 
 impl<'a, DB, P: ?Sized> DynImplements<'a, DB> for P
 where
-    Self: Coercible,
+    Self: InnermostTypeId,
     DB: TypeDatabase,
 {
 }
 
 impl<'a, DB, P> DynCast<'a, DB> for P
 where
-    Self: Pointer<'a>,
+    Self: Pointer<'a> + InnermostTypeId,
     Self::Target: Coercible,
     DB: TypeDatabase,
 {
@@ -160,7 +160,7 @@ where
 /// [`DB`].
 pub trait StaticDynImplements<'a>
 where
-    Self: Coercible,
+    Self: InnermostTypeId,
 {
     /// Lookup whether `self`'s ultimate concrete type implements `U` in the
     /// global [`DB`].
@@ -177,7 +177,7 @@ where
 /// A type that can be dynamically downcast using the global [`DB`].
 pub trait StaticDynCast<'a>
 where
-    Self: Pointer<'a>,
+    Self: Pointer<'a> + InnermostTypeId,
     Self::Target: Coercible,
 {
     /// Downcast `self`'s ultimate concrete type to `U`, if registered as an
@@ -194,13 +194,13 @@ where
 
 #[cfg(any(feature = "static", doc))]
 #[doc(cfg(feature = "static"))]
-impl<'a, P> StaticDynImplements<'a> for P where Self: Coercible {}
+impl<'a, P> StaticDynImplements<'a> for P where Self: InnermostTypeId {}
 
 #[cfg(any(feature = "static", doc))]
 #[doc(cfg(feature = "static"))]
 impl<'a, P> StaticDynCast<'a> for P
 where
-    Self: Pointer<'a>,
+    Self: Pointer<'a> + InnermostTypeId,
     Self::Target: Coercible,
 {
 }
