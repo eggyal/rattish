@@ -17,8 +17,7 @@
 //! # Example
 //! ```rust
 //! #![feature(generic_associated_types, once_cell)]
-//! # #[cfg(feature = "global")]
-//! # {
+//! # #[cfg(feature = "global")] {
 //!
 //! use rattish::{coercible_trait, rtti_global, GlobalDynCast};
 //! use std::{any::Any, cell::RefCell, fmt, rc::Rc};
@@ -74,8 +73,7 @@
 //!     let exp = float.dyn_cast::<dyn fmt::LowerExp>().unwrap();
 //!     assert_eq!(format!("{:e}", exp), "8.76543e2");
 //! }
-//! # main()
-//! # }
+//! # main() }
 //! ```
 //!
 //! # Extending rattish to additional pointer/wrapper types
