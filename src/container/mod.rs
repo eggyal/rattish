@@ -37,12 +37,16 @@ pub unsafe trait Coercible {
     /// type Coerced<U: 'static + ?Sized>: ?Sized
     /// ```
     ///
-    /// For example: `&mut T` becomes `&mut U`, `Box<T>` becomes `Box<U>`, etc.
-    /// A `dyn Trait` will generally just become `U`.
+    /// For example: `&mut T` becomes `&mut T::Coerced<U>`, `Box<T>` becomes
+    /// `Box<T::Coerced<U>>`, etc.  A `dyn Trait` will generally just become
+    /// `U`.
     type Coerced<U: 'static + ?Sized>: ?Sized;
 
-    /// Basically the same as [`Deref::Target`][core::ops::Deref::Target], but
-    /// without any dereferencing so is safe for raw pointers too.
+    /// The directly contained type, similar to
+    /// [`Deref::Target`][core::ops::Deref::Target] but without any
+    /// dereferencing (so is safe for raw pointers too).  For example: `T` is
+    /// the inner type of an `&mut T`, a `Box<T>`, etc.  The inner type of a
+    /// leaf such as `dyn Trait` is `Self`.
     type Inner: ?Sized + Coercible;
 
     /// The ultimate type whose
@@ -73,8 +77,9 @@ pub unsafe trait InnermostTypeId {
     /// [`<Self as ptr::Pointee>::Metadata`][ptr::Pointee::Metadata].
     ///
     /// Unless `Self` is a leaf, such as a `dyn Trait` (in which case this
-    /// should delegate to a trait method), this should just delegate to the
-    /// contained type's `innermost_type_id`.
+    /// should delegate to a trait method like
+    /// [`Any::type_id`][core::any::Any::type_id]), this should just delegate to
+    /// the contained type's `innermost_type_id`.
     fn innermost_type_id(&self) -> Option<TypeId>;
 }
 
