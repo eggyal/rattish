@@ -19,85 +19,95 @@ macro_rules! coercible_trait {
 }
 
 macro_rules! coercibles {
-    (<$lt:lifetime, $x:ident, $u:ident>($self:ident) {
-        $(#[$feature:literal])? $ty:ty => $coerced:ty,
-        $($rest:tt)*
-    }) => {
-        coercibles! {
-            <$lt, $x, $u>($self) {
-                $(#[$feature])? $ty => $coerced { (**$self).innermost_type_id() }, $($rest)*
-            }
+    (
+        <$lt:lifetime, $t:ident, $u:ident>($self:ident, $metadata:ident) {
+            $(#[$feature:literal])? $ty:ty => $coerced:ty $($coerce:block)? as $type:block,
+            $($rest:tt)*
         }
-    };
-    (<$lt:lifetime, $x:ident, $u:ident>($self:ident) {
-        $(#[$feature:literal])? $ty:ty => $coerced:ty { $($token:tt)+ },
-        $($rest:tt)*
-    }) => {
+    ) => {
         $(
             #[cfg(any(feature = $feature, doc))]
             #[doc(cfg(feature = $feature))]
         )?
-        unsafe impl<$lt, $x> $crate::container::InnermostTypeId for $ty
+        unsafe impl<$lt, $t> $crate::container::InnermostTypeId for $ty
         where
-            $x: ?::core::marker::Sized + $crate::container::InnermostTypeId,
+            $t: ?::core::marker::Sized + $crate::container::InnermostTypeId,
         {
-            fn innermost_type_id(&$self) -> ::core::any::TypeId {
-                $($token)+
-            }
+            fn innermost_type_id(&$self) -> ::core::any::TypeId $type
         }
 
         coercibles! {
-            <$lt, $x, $u>($self) {
-                $(#[$feature])? $ty => $coerced {},
+            <$lt, $t, $u>($self, $metadata) {
+                $(#[$feature])? $ty => $coerced $($coerce)?,
                 $($rest)*
             }
         }
     };
-    (<$lt:lifetime, $x:ident, $u:ident>($self:ident) {
-        $(#[$feature:literal])? $ty:ty => $coerced:ty {},
-        $($rest:tt)*
-    }) => {
-        $(
-            #[cfg(any(feature = $feature, doc))]
-            #[doc(cfg(feature = $feature))]
-        )?
-        unsafe impl<$lt, $x> $crate::container::Coercible for $ty
-        where
-            $x: ?::core::marker::Sized + $crate::container::Coercible,
-        {
-            type Coerced<$u: 'static + ?::core::marker::Sized> = $coerced;
-            type Inner = $x;
-            type Innermost = $x::Innermost;
+    (
+        <$lt:lifetime, $t:ident, $u:ident>($self:ident, $metadata:ident) {
+            $(#[$feature:literal])? $ty:ty => $coerced:ty $($coerce:block)? as _,
+            $($rest:tt)*
         }
-
+    ) => {
         coercibles! {
-            <$lt, $x, $u>($self) {
+            <$lt, $t, $u>($self, $metadata) {
+                $(#[$feature])? $ty => $coerced $($coerce)? as { (**$self).innermost_type_id() },
                 $($rest)*
             }
         }
     };
-    (<$lt:lifetime, $x:ident, $u:ident>($self:ident) {}) => {};
-}
-
-macro_rules! pointers {
-    ($(
-        <$lt:lifetime, $x:ident>($self:ident, $metadata: ident) {$(
-            $(#[$feature:literal])? $ty:ty $body:block
-        )+}
-    )+) => {$($(
+    (
+        <$lt:lifetime, $t:ident, $u:ident>($self:ident, $metadata:ident) {
+            $(#[$feature:literal])? $ty:ty => $coerced:ty $coerce:block,
+            $($rest:tt)*
+        }
+    ) => {
         $(
             #[cfg(any(feature = $feature, doc))]
             #[doc(cfg(feature = $feature))]
         )?
-        impl<$lt, $x> $crate::container::Pointer for $ty
+        impl<$lt, $t> $crate::container::Pointer for $ty
         where
-            $x: ?::core::marker::Sized + $crate::container::Coercible,
+            $t: ?::core::marker::Sized + $crate::container::Coercible,
         {
             unsafe fn coerce<U>($self, $metadata: $crate::container::Metadata<$crate::container::Coerced<Self::Inner, U>>) -> Self::Coerced<U>
             where
                 U: ?::core::marker::Sized,
                 Self::Coerced<U>: ::core::marker::Sized,
-            $body
+            $coerce
         }
-    )+)+};
+
+        coercibles! {
+            <$lt, $t, $u>($self, $metadata) {
+                $(#[$feature])? $ty => $coerced,
+                $($rest)*
+            }
+        }
+    };
+    (
+        <$lt:lifetime, $t:ident, $u:ident>($self:ident, $metadata:ident) {
+            $(#[$feature:literal])? $ty:ty => $coerced:ty,
+            $($rest:tt)*
+        }
+    ) => {
+        $(
+            #[cfg(any(feature = $feature, doc))]
+            #[doc(cfg(feature = $feature))]
+        )?
+        unsafe impl<$lt, $t> $crate::container::Coercible for $ty
+        where
+            $t: ?::core::marker::Sized + $crate::container::Coercible,
+        {
+            type Coerced<$u: 'static + ?::core::marker::Sized> = $coerced;
+            type Inner = $t;
+            type Innermost = $t::Innermost;
+        }
+
+        coercibles! {
+            <$lt, $t, $u>($self, $metadata) {
+                $($rest)*
+            }
+        }
+    };
+    (<$lt:lifetime, $t:ident, $u:ident>($self:ident, $metadata:ident) {}) => {};
 }
