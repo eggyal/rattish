@@ -1,6 +1,10 @@
 //! A database for runtime type information.
 
 pub mod error;
+
+#[cfg(all(test, feature = "std"))]
+mod tests;
+
 #[cfg(any(feature = "std", doc))]
 #[doc(cfg(feature = "std"))]
 pub mod hash_map;
@@ -71,7 +75,7 @@ where
     #[cfg_attr(feature = "trace", tracing::instrument(skip_all))]
     fn concrete_type_id<'a, P>(&self, data: &P) -> Result<TypeId, DatabaseEntryError<U, P>>
     where
-        P: InnermostTypeId,
+        P: ?Sized + InnermostTypeId,
     {
         Ok(data.innermost_type_id()?)
     }
@@ -83,7 +87,7 @@ where
     )))]
     fn implements<'a, P>(&self, data: &P) -> Result<bool, DatabaseEntryError<U, P>>
     where
-        P: InnermostTypeId,
+        P: ?Sized + InnermostTypeId,
     {
         self.concrete_type_id(data)
             .map(|type_id| self.contains(type_id))

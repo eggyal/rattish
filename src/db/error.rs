@@ -12,7 +12,10 @@ use thiserror::Error;
 
 /// Error that arose on accessing a database.
 #[cfg_attr(feature = "thiserror", derive(Error))]
-pub enum DatabaseError<U: ?Sized> {
+pub enum DatabaseError<U>
+where
+    U: ?Sized,
+{
     /// The `requested_type` is not registered in the database.
     #[cfg_attr(feature = "thiserror", error(
         "requested type <{}> not registered in database",
@@ -24,7 +27,10 @@ pub enum DatabaseError<U: ?Sized> {
     },
 }
 
-impl<U: ?Sized> fmt::Debug for DatabaseError<U> {
+impl<U> fmt::Debug for DatabaseError<U>
+where
+    U: ?Sized,
+{
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let DatabaseError::RequestedTypeNotInDatabase { requested_type: _ } = self;
         f.debug_tuple("RequestedTypeNotInDatabase")
@@ -35,7 +41,11 @@ impl<U: ?Sized> fmt::Debug for DatabaseError<U> {
 
 /// Error that arose on accessing a database entry.
 #[cfg_attr(feature = "thiserror", derive(Error))]
-pub enum DatabaseEntryError<U: 'static + ?Sized, P> {
+pub enum DatabaseEntryError<U, P>
+where
+    U: 'static + ?Sized,
+    P: ?Sized,
+{
     /// The specified database error occurred.
     #[cfg_attr(feature = "thiserror", error(transparent))]
     DatabaseError {
@@ -76,7 +86,11 @@ pub enum DatabaseEntryError<U: 'static + ?Sized, P> {
     },
 }
 
-impl<U: 'static + ?Sized, P> fmt::Debug for DatabaseEntryError<U, P> {
+impl<U, P> fmt::Debug for DatabaseEntryError<U, P>
+where
+    U: 'static + ?Sized,
+    P: ?Sized,
+{
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         use DatabaseEntryError::*;
 
@@ -104,13 +118,21 @@ impl<U: 'static + ?Sized, P> fmt::Debug for DatabaseEntryError<U, P> {
     }
 }
 
-impl<U: 'static + ?Sized, P> From<DatabaseError<U>> for DatabaseEntryError<U, P> {
+impl<U, P> From<DatabaseError<U>> for DatabaseEntryError<U, P>
+where
+    U: 'static + ?Sized,
+    P: ?Sized,
+{
     fn from(error: DatabaseError<U>) -> Self {
         DatabaseEntryError::DatabaseError { error }
     }
 }
 
-impl<U: 'static + ?Sized, P> From<TypeIdDeterminationError> for DatabaseEntryError<U, P> {
+impl<U, P> From<TypeIdDeterminationError> for DatabaseEntryError<U, P>
+where
+    U: 'static + ?Sized,
+    P: ?Sized,
+{
     fn from(reason: TypeIdDeterminationError) -> Self {
         DatabaseEntryError::ConcreteTypeDeterminationFailure {
             reason,
@@ -130,7 +152,10 @@ pub struct CastError<U: 'static + ?Sized, P> {
     pub pointer: P,
 }
 
-impl<U: 'static + ?Sized, P> fmt::Debug for CastError<U, P> {
+impl<U, P> fmt::Debug for CastError<U, P>
+where
+    U: 'static + ?Sized,
+{
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let Self { source, pointer: _ } = self;
         f.debug_struct("Error")

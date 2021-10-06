@@ -14,6 +14,9 @@
 mod macros;
 mod impls;
 
+#[cfg(test)]
+mod tests;
+
 use core::{any::TypeId, ptr};
 
 /// The [`Pointee::Metadata`][ptr::Pointee::Metadata] of `U`.
@@ -65,7 +68,7 @@ pub unsafe trait Coercible {
 pub type Coerced<T: Coercible, U> = T::Coerced<U>;
 
 /// Error that arose whilst determining a pointee's concrete type.
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "thiserror", derive(thiserror::Error))]
 pub enum TypeIdDeterminationError {
     /// The concrete type could not be determined because the pointer traverses
