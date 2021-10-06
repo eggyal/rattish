@@ -13,6 +13,9 @@ use core::{
 };
 use error::{CastError, DatabaseEntryError, DatabaseError};
 
+#[cfg(feature = "trace")]
+use core::any::type_name;
+
 /// A key-value store, where the key is the [`TypeId`] of a concrete Rust type
 /// and the value is that type's [`Metadata<U>`].
 ///
@@ -49,6 +52,10 @@ where
     U: ?Sized,
 {
     /// Register concrete type `I` as an implementor of `U`.
+    #[cfg_attr(feature = "trace", tracing::instrument(skip_all, fields(
+        U = type_name::<U>(),
+        I = type_name::<I>(),
+    )))]
     fn register<I>(&mut self)
     where
         I: 'static + Unsize<U>,
@@ -61,6 +68,7 @@ where
     }
 
     /// Attempt to determine the concrete type of the given `data`.
+    #[cfg_attr(feature = "trace", tracing::instrument(skip_all))]
     fn concrete_type_id<'a, P>(&self, data: &P) -> Result<TypeId, DatabaseEntryError<U, P>>
     where
         P: InnermostTypeId,
@@ -69,6 +77,10 @@ where
     }
 
     /// Whether `data` is registered as an implementor of `U`.
+    #[cfg_attr(feature = "trace", tracing::instrument(skip_all, fields(
+        P = type_name::<P>(),
+        U = type_name::<U>(),
+    )))]
     fn implements<'a, P>(&self, data: &P) -> Result<bool, DatabaseEntryError<U, P>>
     where
         P: InnermostTypeId,
@@ -79,6 +91,10 @@ where
 
     /// Cast `pointer` to `P::Coerced<U>`, if registered as an implementor of
     /// `U`.
+    #[cfg_attr(feature = "trace", tracing::instrument(skip_all, fields(
+        P = type_name::<P>(),
+        U = type_name::<U>(),
+    )))]
     fn cast<'a, P>(&self, pointer: P) -> Result<P::Coerced<U>, CastError<U, P>>
     where
         P: Pointer + InnermostTypeId,
@@ -149,6 +165,9 @@ where
 {
     /// Returns a shared/immutable reference to the value of the entry that is
     /// keyed by `U`.
+    #[cfg_attr(feature = "trace", tracing::instrument(skip_all, fields(
+        U = type_name::<U>(),
+    )))]
     fn get_db_entry<U>(&self) -> Result<&Self::Entry<U>, DatabaseError<U>>
     where
         U: 'static + ?Sized,

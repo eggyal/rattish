@@ -9,6 +9,9 @@ use std::{
 #[cfg(any(feature = "global", doc))]
 use std::lazy::SyncOnceCell;
 
+#[cfg(feature = "trace")]
+use core::any::type_name;
+
 /// A [`TypeDatabase`] backed by a [`HashMap`].
 #[derive(Default)]
 #[doc(cfg(feature = "std"))]
@@ -57,7 +60,10 @@ pub static DB: SyncOnceCell<HashMapTypeDatabase> = SyncOnceCell::new();
 #[doc(cfg(feature = "global"))]
 macro_rules! rtti_global {
     ($( $token:tt )+) => {{
-        $crate::db::hash_map::DB.set($crate::rtti!($($token)+)).ok().expect("uninitialized database");
+        $crate::db::hash_map::DB
+            .set($crate::rtti!($($token)+))
+            .ok()
+            .expect("uninitialized database");
     }};
 }
 
@@ -65,14 +71,17 @@ unsafe impl<U> TypeDatabaseEntry<U> for HashMapTypeDatabaseEntry<U>
 where
     U: ?Sized,
 {
+    #[cfg_attr(feature = "trace", tracing::instrument(skip(self, metadata)))]
     unsafe fn add(&mut self, type_id: TypeId, metadata: Metadata<U>) {
         self.0.insert(type_id, metadata);
     }
 
+    #[cfg_attr(feature = "trace", tracing::instrument(skip(self)))]
     fn contains<'a>(&self, type_id: TypeId) -> bool {
         self.0.contains_key(&type_id)
     }
 
+    #[cfg_attr(feature = "trace", tracing::instrument(skip(self)))]
     fn metadata(&self, type_id: TypeId) -> Option<&Metadata<U>> {
         self.0.get(&type_id)
     }
@@ -81,6 +90,9 @@ where
 unsafe impl TypeDatabase for HashMapTypeDatabase {
     type Entry<U: ?Sized> = HashMapTypeDatabaseEntry<U>;
 
+    #[cfg_attr(feature = "trace", tracing::instrument(skip_all, fields(
+        U = type_name::<U>(),
+    )))]
     fn get_entry_mut<U>(&mut self) -> &mut Self::Entry<U>
     where
         U: 'static + ?Sized,
@@ -92,6 +104,9 @@ unsafe impl TypeDatabase for HashMapTypeDatabase {
             .unwrap()
     }
 
+    #[cfg_attr(feature = "trace", tracing::instrument(skip_all, fields(
+        U = type_name::<U>(),
+    )))]
     fn get_entry<U>(&self) -> Option<&Self::Entry<U>>
     where
         U: 'static + ?Sized,
