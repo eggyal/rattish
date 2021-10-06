@@ -11,5 +11,8 @@ categories = ["data-structures", "memory-management", "no-std", "rust-patterns"]
 
 [features]
 alloc = []
-std = ["alloc"]
+std = ["alloc", "thiserror"]
 global = ["std"]
+
+[dependencies]
+thiserror = { version = "1.0.29", optional = true }

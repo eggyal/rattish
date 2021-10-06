@@ -4,6 +4,11 @@ use core::{
     ptr,
 };
 
+#[cfg(feature = "alloc")]
+use super::TypeIdDeterminationError::UnableToUpgradeWeakReference;
+#[cfg(feature = "alloc")]
+use core::any::type_name;
+
 #[cfg(any(feature = "alloc", doc))]
 use alloc::{boxed::Box, rc, sync};
 
@@ -46,7 +51,9 @@ coercibles! {
         #["alloc"] rc::Weak<T> => rc::Weak<T::Coerced<U>> {
             rc::Weak::from_raw(rc::Weak::into_raw(self).coerce(metadata))
         } as {
-            self.upgrade()?.innermost_type_id()
+            self.upgrade()
+                .ok_or(UnableToUpgradeWeakReference { type_name: type_name::<Self>() })?
+                .innermost_type_id()
         },
         #["alloc"] sync::Arc<T> => sync::Arc<T::Coerced<U>> {
             sync::Arc::from_raw(sync::Arc::into_raw(self).coerce(metadata))
@@ -54,7 +61,9 @@ coercibles! {
         #["alloc"] sync::Weak<T> => sync::Weak<T::Coerced<U>> {
             sync::Weak::from_raw(sync::Weak::into_raw(self).coerce(metadata))
         } as {
-            self.upgrade()?.innermost_type_id()
+            self.upgrade()
+                .ok_or(UnableToUpgradeWeakReference { type_name: type_name::<Self>() })?
+                .innermost_type_id()
         },
     }
 }

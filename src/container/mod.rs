@@ -64,6 +64,19 @@ pub unsafe trait Coercible {
 #[allow(type_alias_bounds)]
 pub type Coerced<T: Coercible, U> = T::Coerced<U>;
 
+/// Error that arose whilst determining a pointee's concrete type.
+#[derive(Debug)]
+#[cfg_attr(feature = "thiserror", derive(thiserror::Error))]
+pub enum TypeIdDeterminationError {
+    /// The concrete type could not be determined because the pointer traverses
+    /// a weak reference to some data that is no longer available.
+    #[cfg_attr(feature = "thiserror", error("unable to upgrade {type_name}"))]
+    UnableToUpgradeWeakReference {
+        /// The name of the Weak reference type that could not be upgraded
+        type_name: &'static str,
+    },
+}
+
 /// A dereferenceable type that inherits
 /// [`Pointee::Metadata`][ptr::Pointee::Metadata] from a contained type,
 /// pointers to which are therefore coercible if that contained type is
@@ -80,7 +93,7 @@ pub unsafe trait InnermostTypeId {
     /// should delegate to a trait method like
     /// [`Any::type_id`][core::any::Any::type_id]), this should just delegate to
     /// the contained type's `innermost_type_id`.
-    fn innermost_type_id(&self) -> Option<TypeId>;
+    fn innermost_type_id(&self) -> Result<TypeId, TypeIdDeterminationError>;
 }
 
 /// A [`Sized`] type that inherits [`Pointee::Metadata`][ptr::Pointee::Metadata]

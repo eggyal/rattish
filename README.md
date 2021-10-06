@@ -66,7 +66,7 @@ fn main() {
 
     // Enjoy that?  Have another, just for fun:
     let float: &dyn Any = &876.543f32;
-    let exp = float.dyn_cast::<dyn fmt::LowerExp>().unwrap();
+    let exp = float.dyn_cast::<dyn fmt::LowerExp>().ok().unwrap();
     assert_eq!(format!("{:e}", exp), "8.76543e2");
 }
 ```

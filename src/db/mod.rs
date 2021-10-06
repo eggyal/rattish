@@ -1,11 +1,17 @@
 //! A database for runtime type information.
 
+pub mod error;
 #[cfg(any(feature = "std", doc))]
 #[doc(cfg(feature = "std"))]
 pub mod hash_map;
 
 use crate::container::{Coerced, Coercible, InnermostTypeId, Metadata, Pointer};
-use core::{any::TypeId, marker::Unsize, ptr};
+use core::{
+    any::TypeId,
+    marker::{PhantomData, Unsize},
+    ptr,
+};
+use error::{CastError, DatabaseEntryError, DatabaseError};
 
 /// A key-value store, where the key is the [`TypeId`] of a concrete Rust type
 /// and the value is that type's [`Metadata<U>`].
@@ -54,20 +60,26 @@ where
         }
     }
 
-    /// Whether `data` is registered as an implementor of `U`.
-    fn implements<'a, P>(&self, data: P) -> bool
+    /// Attempt to determine the concrete type of the given `data`.
+    fn concrete_type_id<'a, P>(&self, data: &P) -> Result<TypeId, DatabaseEntryError<U, P>>
     where
         P: InnermostTypeId,
     {
-        match data.innermost_type_id() {
-            Some(type_id) => self.contains(type_id),
-            None => false,
-        }
+        Ok(data.innermost_type_id()?)
+    }
+
+    /// Whether `data` is registered as an implementor of `U`.
+    fn implements<'a, P>(&self, data: &P) -> Result<bool, DatabaseEntryError<U, P>>
+    where
+        P: InnermostTypeId,
+    {
+        self.concrete_type_id(data)
+            .map(|type_id| self.contains(type_id))
     }
 
     /// Cast `pointer` to `P::Coerced<U>`, if registered as an implementor of
     /// `U`.
-    fn cast<'a, P>(&self, pointer: P) -> Result<P::Coerced<U>, P>
+    fn cast<'a, P>(&self, pointer: P) -> Result<P::Coerced<U>, CastError<U, P>>
     where
         P: Pointer + InnermostTypeId,
         P::Coerced<U>: Sized,
@@ -75,12 +87,16 @@ where
         Coerced<P::Inner, U>: ptr::Pointee<Metadata = Metadata<U>>,
     {
         unsafe {
-            match pointer
-                .innermost_type_id()
-                .and_then(|type_id| self.metadata(type_id))
-            {
-                Some(&metadata) => Ok(pointer.coerce(metadata)),
-                None => Err(pointer),
+            match self.concrete_type_id(&pointer).and_then(|type_id| {
+                self.metadata(type_id).ok_or(
+                    DatabaseEntryError::ConcreteTypeNotRegisteredForTarget {
+                        type_id,
+                        requested_type: PhantomData,
+                    },
+                )
+            }) {
+                Ok(&metadata) => Ok(pointer.coerce(metadata)),
+                Err(source) => Err(CastError { source, pointer }),
             }
         }
     }
@@ -125,3 +141,23 @@ pub unsafe trait TypeDatabase {
     where
         U: 'static + ?Sized;
 }
+
+/// The consumer interface of a `TypeDatabase`.
+pub trait TypeDatabaseExt
+where
+    Self: TypeDatabase,
+{
+    /// Returns a shared/immutable reference to the value of the entry that is
+    /// keyed by `U`.
+    fn get_db_entry<U>(&self) -> Result<&Self::Entry<U>, DatabaseError<U>>
+    where
+        U: 'static + ?Sized,
+    {
+        self.get_entry()
+            .ok_or(DatabaseError::RequestedTypeNotInDatabase {
+                requested_type: PhantomData,
+            })
+    }
+}
+
+impl<DB> TypeDatabaseExt for DB where Self: TypeDatabase {}

@@ -70,7 +70,7 @@
 //!
 //!     // Enjoy that?  Have another, just for fun:
 //!     let float: &dyn Any = &876.543f32;
-//!     let exp = float.dyn_cast::<dyn fmt::LowerExp>().unwrap();
+//!     let exp = float.dyn_cast::<dyn fmt::LowerExp>().ok().unwrap();
 //!     assert_eq!(format!("{:e}", exp), "8.76543e2");
 //! }
 //! # main() }
@@ -95,7 +95,10 @@ pub mod db;
 
 use container::{Coerced, Coercible, InnermostTypeId, Metadata, Pointer};
 use core::ptr;
-use db::{TypeDatabase, TypeDatabaseEntryExt};
+use db::{
+    error::{CastError, DatabaseEntryError},
+    TypeDatabaseEntryExt, TypeDatabaseExt,
+};
 
 #[cfg(any(feature = "global", doc))]
 use db::hash_map::DB;
@@ -104,16 +107,14 @@ use db::hash_map::DB;
 pub trait DynImplements<'a, DB>
 where
     Self: InnermostTypeId,
-    DB: TypeDatabase,
+    DB: TypeDatabaseExt,
 {
     /// Lookup whether `self`'s ultimate concrete type implements `U` in `db`.
-    fn dyn_implements<U>(&'a self, db: &DB) -> bool
+    fn dyn_implements<U>(&'a self, db: &DB) -> Result<bool, DatabaseEntryError<U, &Self>>
     where
         U: 'static + ?Sized,
     {
-        db.get_entry::<U>()
-            .map(|types| types.implements(self))
-            .unwrap_or(false)
+        db.get_db_entry::<U>()?.implements(&self)
     }
 }
 
@@ -122,19 +123,22 @@ pub trait DynCast<'a, DB>
 where
     Self: Pointer + InnermostTypeId,
     Self::Inner: Coercible,
-    DB: TypeDatabase,
+    DB: TypeDatabaseExt,
 {
     /// Cast `self`'s ultimate concrete type to `U`, if registered as an
     /// implementor of `U` in `db`.
-    fn dyn_cast<U>(self, db: &DB) -> Result<Self::Coerced<U>, Self>
+    fn dyn_cast<U>(self, db: &DB) -> Result<Self::Coerced<U>, CastError<U, Self>>
     where
         U: 'static + ?Sized,
         Self::Coerced<U>: Sized,
         Coerced<Self::Inner, U>: ptr::Pointee<Metadata = Metadata<U>>,
     {
-        match db.get_entry() {
-            Some(entry) => entry.cast(self),
-            None => Err(self),
+        match db.get_db_entry() {
+            Ok(entry) => entry.cast(self),
+            Err(source) => Err(CastError {
+                source: source.into(),
+                pointer: self,
+            }),
         }
     }
 }
@@ -142,7 +146,7 @@ where
 impl<'a, DB, P: ?Sized> DynImplements<'a, DB> for P
 where
     Self: InnermostTypeId,
-    DB: TypeDatabase,
+    DB: TypeDatabaseExt,
 {
 }
 
@@ -150,7 +154,7 @@ impl<'a, DB, P> DynCast<'a, DB> for P
 where
     Self: Pointer + InnermostTypeId,
     Self::Inner: Coercible,
-    DB: TypeDatabase,
+    DB: TypeDatabaseExt,
 {
 }
 
@@ -164,7 +168,7 @@ where
 {
     /// Lookup whether `self`'s ultimate concrete type implements `U` in the
     /// global [`DB`].
-    fn dyn_implements<U>(&'a self) -> bool
+    fn dyn_implements<U>(&'a self) -> Result<bool, DatabaseEntryError<U, &Self>>
     where
         U: 'static + ?Sized,
     {
@@ -182,7 +186,7 @@ where
 {
     /// Cast `self`'s ultimate concrete type to `U`, if registered as an
     /// implementor of `U` in the global [`DB`].
-    fn dyn_cast<U>(self) -> Result<Self::Coerced<U>, Self>
+    fn dyn_cast<U>(self) -> Result<Self::Coerced<U>, CastError<U, Self>>
     where
         U: 'static + ?Sized,
         Self::Coerced<U>: Sized,
