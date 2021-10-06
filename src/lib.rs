@@ -32,13 +32,13 @@
 //! // Casting to an object of trait Bar does not require anything
 //! // special..
 //! trait Bar {
-//!     fn bar(&self) -> i32;
+//!     fn double(&self) -> i32;
 //! }
 //!
 //! struct Qux(i32);
 //! impl Foo for Qux {}
 //! impl Bar for Qux {
-//!     fn bar(&self) -> i32 {
+//!     fn double(&self) -> i32 {
 //!         self.0 * 2
 //!     }
 //! }
@@ -65,8 +65,7 @@
 //!         = foo.dyn_cast::<dyn Bar>().ok().unwrap();
 //!
 //!     // Lo!  We have indeed casted between trait objects.
-//!     let int = bar.borrow().bar();
-//!     assert_eq!(int, 246);
+//!     assert_eq!(bar.borrow().double(), 246);
 //!
 //!     // Enjoy that?  Have another, just for fun:
 //!     let float: &dyn Any = &876.543f32;
