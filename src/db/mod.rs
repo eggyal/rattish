@@ -112,6 +112,7 @@ where
                     DatabaseEntryError::ConcreteTypeNotRegisteredForTarget {
                         type_id,
                         requested_type: PhantomData,
+                        instance_type: PhantomData,
                     },
                 )
             }) {

@@ -80,9 +80,12 @@ where
         /// The [`TypeId`] of the concrete type underlying the provided instance
         /// of `P`.
         type_id: TypeId,
-
+        
         /// The type that was requested.
         requested_type: PhantomData<U>,
+
+        /// The pointer type.
+        instance_type: PhantomData<P>,
     },
 }
 
@@ -109,10 +112,12 @@ where
             ConcreteTypeNotRegisteredForTarget {
                 type_id,
                 requested_type: _,
+                instance_type: _,
             } => f
                 .debug_tuple("ConcreteTypeNotRegisteredForTarget")
                 .field(type_id)
                 .field(&type_name::<U>())
+                .field(&type_name::<P>())
                 .finish(),
         }
     }
