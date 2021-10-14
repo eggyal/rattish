@@ -1,10 +1,10 @@
-#![cfg_attr(not(any(feature = "std", doc)), no_std)]
+#![cfg_attr(not(feature = "std"), no_std)]
 #![cfg_attr(
-    any(feature = "global", doc, all(feature = "std", test)),
+    any(feature = "global", all(feature = "std", test)),
     feature(once_cell)
 )]
+#![cfg_attr(doc, feature(doc_cfg))]
 #![feature(
-    doc_cfg,
     generic_associated_types,
     ptr_metadata,
     unsize,
@@ -20,8 +20,12 @@
 //!
 //! rattish is presently only experimental, and depends on unstable compiler
 //! features including [`generic_associated_types`], [`ptr_metadata`] and
-//! [`unsize`]; [`once_cell`] is used by [`DB`] (enabled by the `global`
-//! feature).  Accordingly, a nightly toolchain is required.
+//! [`unsize`].
+#![cfg_attr(
+    feature = "global",
+    doc = "[`once_cell`] is used by [`DB`] (enabled by the `global` feature)."
+)]
+//! Accordingly, a nightly toolchain is required.
 //!
 //! # Example
 //! ```rust
@@ -95,7 +99,7 @@
 //! [`ptr_metadata`]: https://doc.rust-lang.org/nightly/unstable-book/library-features/ptr-metadata.html
 //! [`unsize`]: https://doc.rust-lang.org/nightly/unstable-book/library-features/unsize.html
 
-#[cfg(all(any(feature = "alloc", doc), not(feature = "std")))]
+#[cfg(all(feature = "alloc", not(feature = "std")))]
 extern crate alloc;
 
 pub mod container;
@@ -112,7 +116,7 @@ use db::{
     TypeDatabaseEntryExt, TypeDatabaseExt,
 };
 
-#[cfg(any(feature = "global", doc))]
+#[cfg(feature = "global")]
 use db::{error::DatabaseError, hash_map::DB};
 
 #[cfg(feature = "tracing")]
@@ -181,8 +185,7 @@ where
 {
 }
 
-#[cfg(any(feature = "global", doc))]
-#[doc(cfg(feature = "global"))]
+#[cfg(feature = "global")]
 /// A type whose implementations can be dynamically determined using the global
 /// [`DB`].
 pub trait GlobalDynImplements
@@ -201,8 +204,7 @@ where
     }
 }
 
-#[cfg(any(feature = "global", doc))]
-#[doc(cfg(feature = "global"))]
+#[cfg(feature = "global")]
 /// A type that can be dynamically cast using the global [`DB`].
 pub trait GlobalDynCast
 where
@@ -228,12 +230,10 @@ where
     }
 }
 
-#[cfg(any(feature = "global", doc))]
-#[doc(cfg(feature = "global"))]
+#[cfg(feature = "global")]
 impl<P> GlobalDynImplements for P where Self: InnermostTypeId {}
 
-#[cfg(any(feature = "global", doc))]
-#[doc(cfg(feature = "global"))]
+#[cfg(feature = "global")]
 impl<P> GlobalDynCast for P
 where
     Self: Pointer + InnermostTypeId,

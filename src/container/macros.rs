@@ -49,10 +49,7 @@ macro_rules! coercibles {
             $($rest:tt)*
         }
     ) => {
-        $(
-            #[cfg(any(feature = $feature, doc))]
-            #[doc(cfg(feature = $feature))]
-        )?
+        $( #[cfg(feature = $feature)] )?
         unsafe impl<$t> $crate::container::InnermostTypeId for $ty
         where
             $t: ?::core::marker::Sized + $crate::container::InnermostTypeId,
@@ -78,10 +75,7 @@ macro_rules! coercibles {
             $($rest:tt)*
         }
     ) => {
-        $(
-            #[cfg(any(feature = $feature, doc))]
-            #[doc(cfg(feature = $feature))]
-        )?
+        $( #[cfg(feature = $feature)] )?
         impl<$t> $crate::container::Pointer for $ty
         where
             $t: ?::core::marker::Sized + $crate::container::Coercible,
@@ -130,10 +124,7 @@ macro_rules! coercibles {
             $($rest:tt)*
         }
     ) => {
-        $(
-            #[cfg(any(feature = $feature, doc))]
-            #[doc(cfg(feature = $feature))]
-        )?
+        $( #[cfg(feature = $feature)] )?
         unsafe impl<$($lt,)? $t> $crate::container::Coercible for $ty
         where
             $t: ?::core::marker::Sized + $crate::container::Coercible,

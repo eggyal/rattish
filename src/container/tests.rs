@@ -8,10 +8,10 @@ use core::{
     ptr,
 };
 
-#[cfg(all(any(feature = "alloc", doc), not(feature = "std")))]
+#[cfg(all(feature = "alloc", not(feature = "std")))]
 use alloc::{boxed::Box, rc, sync};
 
-#[cfg(any(feature = "std", doc))]
+#[cfg(feature = "std")]
 use std::{boxed::Box, rc, sync};
 
 #[cfg(feature = "alloc")]

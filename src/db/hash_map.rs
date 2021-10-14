@@ -7,16 +7,14 @@ use std::{
     fmt,
 };
 
-#[cfg(any(feature = "global", doc))]
+#[cfg(feature = "global")]
 use std::lazy::SyncOnceCell;
 
 /// A [`TypeDatabase`] backed by a [`HashMap`].
 #[derive(Debug, Default)]
-#[doc(cfg(feature = "std"))]
 pub struct HashMapTypeDatabase(HashMap<TypeId, Box<dyn Any + Send + Sync>>);
 
 /// A [`TypeDatabaseEntry`] backed by a [`HashMap`].
-#[doc(cfg(feature = "std"))]
 pub struct HashMapTypeDatabaseEntry<U>(HashMap<TypeId, Metadata<U>>)
 where
     U: ?Sized;
@@ -40,7 +38,7 @@ impl<U> fmt::Debug for HashMapTypeDatabaseEntry<U> {
 /// Evaluates to a newly instantiated [`HashMapTypeDatabase`], initialized with
 /// the provided entries.
 #[macro_export]
-#[doc(cfg(feature = "std"))]
+#[cfg_attr(doc, doc(cfg(feature = "std")))]
 macro_rules! rtti {
     ($( $trait:path: $( $ty:ty )+, )+) => {{
         use $crate::db::{TypeDatabase, TypeDatabaseEntryExt};
@@ -55,14 +53,12 @@ macro_rules! rtti {
 
 /// A global, immutable, thread-safe [`HashMapTypeDatabase`] that can be
 /// initialized with [`rtti_global`].
-#[cfg(any(feature = "global", doc))]
-#[doc(cfg(feature = "global"))]
+#[cfg(feature = "global")]
 pub static DB: SyncOnceCell<HashMapTypeDatabase> = SyncOnceCell::new();
 
 /// Instantiates the global [`DB`] with the provided entries.
 #[macro_export]
-#[cfg(any(feature = "global", doc))]
-#[doc(cfg(feature = "global"))]
+#[cfg(feature = "global")]
 macro_rules! rtti_global {
     ($( $token:tt )+) => {{
         $crate::db::hash_map::DB

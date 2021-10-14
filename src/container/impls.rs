@@ -9,10 +9,10 @@ use super::TypeIdDeterminationError::UnableToUpgradeWeakReference;
 #[cfg(feature = "alloc")]
 use core::any::type_name;
 
-#[cfg(all(feature = "alloc", not(any(feature = "std", doc))))]
+#[cfg(all(feature = "alloc", not(feature = "std")))]
 use alloc::{boxed::Box, rc, sync};
 
-#[cfg(any(feature = "std", doc))]
+#[cfg(feature = "std")]
 use std::{boxed::Box, rc, sync};
 
 coercible_trait!(Any);

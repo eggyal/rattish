@@ -5,8 +5,7 @@ pub mod error;
 #[cfg(all(test, feature = "std"))]
 mod tests;
 
-#[cfg(any(feature = "std", doc))]
-#[doc(cfg(feature = "std"))]
+#[cfg(feature = "std")]
 pub mod hash_map;
 
 use crate::container::{Coerced, Coercible, InnermostTypeId, Metadata, Pointer};
