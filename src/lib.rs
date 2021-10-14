@@ -110,7 +110,7 @@ use db::hash_map::DB;
 use core::any::type_name;
 
 /// A type whose implementations can be dynamically determined.
-pub trait DynImplements<'a, DB>
+pub trait DynImplements<DB>
 where
     Self: InnermostTypeId,
     DB: TypeDatabaseExt,
@@ -120,7 +120,7 @@ where
         Self = type_name::<Self>(),
         U = type_name::<U>(),
     )))]
-    fn dyn_implements<U>(&'a self, db: &DB) -> Result<bool, DatabaseEntryError<U, &Self>>
+    fn dyn_implements<U>(&self, db: &DB) -> Result<bool, DatabaseEntryError<U, &Self>>
     where
         U: 'static + ?Sized,
     {
@@ -129,7 +129,7 @@ where
 }
 
 /// A type that can be dynamically cast.
-pub trait DynCast<'a, DB>
+pub trait DynCast<DB>
 where
     Self: Pointer + InnermostTypeId,
     Self::Inner: Coercible,
@@ -157,14 +157,14 @@ where
     }
 }
 
-impl<'a, DB, P: ?Sized> DynImplements<'a, DB> for P
+impl<DB, P: ?Sized> DynImplements<DB> for P
 where
     Self: InnermostTypeId,
     DB: TypeDatabaseExt,
 {
 }
 
-impl<'a, DB, P> DynCast<'a, DB> for P
+impl<DB, P> DynCast<DB> for P
 where
     Self: Pointer + InnermostTypeId,
     Self::Inner: Coercible,
@@ -176,14 +176,14 @@ where
 #[doc(cfg(feature = "global"))]
 /// A type whose implementations can be dynamically determined using the global
 /// [`DB`].
-pub trait GlobalDynImplements<'a>
+pub trait GlobalDynImplements
 where
     Self: InnermostTypeId,
 {
     /// Lookup whether `self`'s ultimate concrete type implements `U` in the
     /// global [`DB`].
     #[cfg_attr(feature = "trace", tracing::instrument(skip_all))]
-    fn dyn_implements<U>(&'a self) -> Result<bool, DatabaseEntryError<U, &Self>>
+    fn dyn_implements<U>(&self) -> Result<bool, DatabaseEntryError<U, &Self>>
     where
         U: 'static + ?Sized,
     {
@@ -194,7 +194,7 @@ where
 #[cfg(any(feature = "global", doc))]
 #[doc(cfg(feature = "global"))]
 /// A type that can be dynamically cast using the global [`DB`].
-pub trait GlobalDynCast<'a>
+pub trait GlobalDynCast
 where
     Self: Pointer + InnermostTypeId,
     Self::Inner: Coercible,
@@ -214,11 +214,11 @@ where
 
 #[cfg(any(feature = "global", doc))]
 #[doc(cfg(feature = "global"))]
-impl<'a, P> GlobalDynImplements<'a> for P where Self: InnermostTypeId {}
+impl<P> GlobalDynImplements for P where Self: InnermostTypeId {}
 
 #[cfg(any(feature = "global", doc))]
 #[doc(cfg(feature = "global"))]
-impl<'a, P> GlobalDynCast<'a> for P
+impl<P> GlobalDynCast for P
 where
     Self: Pointer + InnermostTypeId,
     Self::Inner: Coercible,

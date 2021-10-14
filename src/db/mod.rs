@@ -42,7 +42,7 @@ where
     unsafe fn add(&mut self, type_id: TypeId, metadata: Metadata<U>);
 
     /// Whether this store contains metadata for `type_id`.
-    fn contains<'a>(&self, type_id: TypeId) -> bool;
+    fn contains(&self, type_id: TypeId) -> bool;
 
     /// A reference to the metadata, if any, previously
     /// [`add`][TypeDatabaseEntry::add]ed for the given `type_id`.
@@ -73,7 +73,7 @@ where
 
     /// Attempt to determine the concrete type of the given `data`.
     #[cfg_attr(feature = "trace", tracing::instrument(skip_all))]
-    fn concrete_type_id<'a, P>(&self, data: &P) -> Result<TypeId, DatabaseEntryError<U, P>>
+    fn concrete_type_id<P>(&self, data: &P) -> Result<TypeId, DatabaseEntryError<U, P>>
     where
         P: ?Sized + InnermostTypeId,
     {
@@ -85,7 +85,7 @@ where
         P = type_name::<P>(),
         U = type_name::<U>(),
     )))]
-    fn implements<'a, P>(&self, data: &P) -> Result<bool, DatabaseEntryError<U, P>>
+    fn implements<P>(&self, data: &P) -> Result<bool, DatabaseEntryError<U, P>>
     where
         P: ?Sized + InnermostTypeId,
     {
@@ -99,7 +99,7 @@ where
         P = type_name::<P>(),
         U = type_name::<U>(),
     )))]
-    fn cast<'a, P>(&self, pointer: P) -> Result<P::Coerced<U>, CastError<U, P>>
+    fn cast<P>(&self, pointer: P) -> Result<P::Coerced<U>, CastError<U, P>>
     where
         P: Pointer + InnermostTypeId,
         P::Coerced<U>: Sized,

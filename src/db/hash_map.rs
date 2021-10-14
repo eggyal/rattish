@@ -77,7 +77,7 @@ where
     }
 
     #[cfg_attr(feature = "trace", tracing::instrument(skip(self)))]
-    fn contains<'a>(&self, type_id: TypeId) -> bool {
+    fn contains(&self, type_id: TypeId) -> bool {
         self.0.contains_key(&type_id)
     }
 
