@@ -4,12 +4,8 @@
     feature(once_cell)
 )]
 #![cfg_attr(doc, feature(doc_cfg))]
-#![feature(
-    generic_associated_types,
-    ptr_metadata,
-    unsize,
-    option_result_unwrap_unchecked
-)]
+#![cfg_attr(feature = "std", feature(option_result_unwrap_unchecked))]
+#![feature(generic_associated_types, ptr_metadata, unsize)]
 #![deny(missing_docs)]
 
 //! rattish enables dynamic casting between different trait objects.
