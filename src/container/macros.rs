@@ -11,12 +11,12 @@ macro_rules! coercible_trait {
         }
 
         unsafe impl $crate::container::InnermostTypeId for dyn $trait {
-            #[cfg_attr(feature = "trace", $crate::tracing::instrument(skip_all))]
+            #[cfg_attr(feature = "tracing", $crate::tracing::instrument(skip_all))]
             fn innermost_type_id(
                 &self,
             ) -> Result<::core::any::TypeId, $crate::container::TypeIdDeterminationError> {
                 let type_id = ::core::any::Any::type_id(self);
-                #[cfg(feature = "trace")]
+                #[cfg(feature = "tracing")]
                 $crate::tracing::info!("found type_id {:?}", type_id);
                 Ok(type_id)
             }
@@ -57,7 +57,7 @@ macro_rules! coercibles {
         where
             $t: ?::core::marker::Sized + $crate::container::InnermostTypeId,
         {
-            #[cfg_attr(feature = "trace", tracing::instrument(skip_all, fields(
+            #[cfg_attr(feature = "tracing", tracing::instrument(skip_all, fields(
                 Self = ::core::any::type_name::<Self>(),
             )))]
             fn innermost_type_id(&$self) -> Result<::core::any::TypeId, $crate::container::TypeIdDeterminationError> $type
@@ -86,7 +86,7 @@ macro_rules! coercibles {
         where
             $t: ?::core::marker::Sized + $crate::container::Coercible,
         {
-            #[cfg_attr(feature = "trace", tracing::instrument(skip_all, fields(
+            #[cfg_attr(feature = "tracing", tracing::instrument(skip_all, fields(
                 Self = ::core::any::type_name::<Self>(),
                 U = ::core::any::type_name::<U>(),
             )))]

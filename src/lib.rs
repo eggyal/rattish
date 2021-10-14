@@ -102,7 +102,7 @@ pub mod container;
 pub mod db;
 
 #[doc(hidden)]
-#[cfg(feature = "trace")]
+#[cfg(feature = "tracing")]
 pub use tracing;
 
 use container::{Coerced, Coercible, InnermostTypeId, Metadata, Pointer};
@@ -115,7 +115,7 @@ use db::{
 #[cfg(any(feature = "global", doc))]
 use db::{error::DatabaseError, hash_map::DB};
 
-#[cfg(feature = "trace")]
+#[cfg(feature = "tracing")]
 use core::any::type_name;
 
 /// A type whose implementations can be dynamically determined.
@@ -125,7 +125,7 @@ where
     DB: TypeDatabaseExt,
 {
     /// Lookup whether `self`'s ultimate concrete type implements `U` in `db`.
-    #[cfg_attr(feature = "trace", tracing::instrument(skip_all, fields(
+    #[cfg_attr(feature = "tracing", tracing::instrument(skip_all, fields(
         Self = type_name::<Self>(),
         U = type_name::<U>(),
     )))]
@@ -146,7 +146,7 @@ where
 {
     /// Cast `self`'s ultimate concrete type to `U`, if registered as an
     /// implementor of `U` in `db`.
-    #[cfg_attr(feature = "trace", tracing::instrument(skip_all, fields(
+    #[cfg_attr(feature = "tracing", tracing::instrument(skip_all, fields(
         Self = type_name::<Self>(),
         U = type_name::<U>(),
     )))]
@@ -191,7 +191,7 @@ where
 {
     /// Lookup whether `self`'s ultimate concrete type implements `U` in the
     /// global [`DB`].
-    #[cfg_attr(feature = "trace", tracing::instrument(skip_all))]
+    #[cfg_attr(feature = "tracing", tracing::instrument(skip_all))]
     fn dyn_implements<U>(&self) -> Result<bool, DatabaseEntryError<U, &Self>>
     where
         U: 'static + ?Sized,
@@ -211,7 +211,7 @@ where
 {
     /// Cast `self`'s ultimate concrete type to `U`, if registered as an
     /// implementor of `U` in the global [`DB`].
-    #[cfg_attr(feature = "trace", tracing::instrument(skip_all))]
+    #[cfg_attr(feature = "tracing", tracing::instrument(skip_all))]
     fn dyn_cast<U>(self) -> Result<Self::Coerced<U>, CastError<U, Self>>
     where
         U: 'static + ?Sized,
