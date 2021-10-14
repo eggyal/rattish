@@ -1,20 +1,24 @@
+#![allow(trivial_casts)]
+
 use super::{InnermostTypeId, Metadata, Pointer};
 use core::{
     any::{Any, TypeId},
     cell::{Ref, RefCell, RefMut},
-    cmp,
     marker::Unsize,
     ptr,
 };
 
-#[cfg(feature = "alloc")]
+#[cfg(all(any(feature = "alloc", doc), not(feature = "std")))]
 use alloc::{boxed::Box, rc, sync};
+
+#[cfg(any(feature = "std", doc))]
+use std::{boxed::Box, rc, sync};
 
 #[cfg(feature = "alloc")]
 use super::TypeIdDeterminationError::UnableToUpgradeWeakReference;
 
 type T = i32;
-type U = dyn cmp::PartialEq<T>;
+type U = dyn PartialEq<T>;
 const ADDRESS: *mut () = 0xdeadbeef_usize as _;
 const METADATA: Metadata<U> = ptr::metadata::<U>(ptr::null::<T>());
 
@@ -37,7 +41,7 @@ fn metadata<T: Unsize<U>, U: ?Sized>() -> Metadata<U> {
 
 #[test]
 fn raw_const_ptr_coerces() {
-    const ADDRESS: *const () = self::ADDRESS as _;
+    const ADDRESS: *const () = self::ADDRESS;
     unsafe {
         let ptr: *const dyn Any = ADDRESS as *const T;
         let coerced = ptr.coerce::<U>(METADATA);
@@ -94,7 +98,7 @@ fn mut_ref_coerces() {
 fn cell_ref_coerces() {
     unsafe {
         let cell = RefCell::new(12345);
-        let borrow: Ref<dyn Any> = cell.borrow();
+        let borrow: Ref<'_, dyn Any> = cell.borrow();
         let coerced = borrow.coerce::<U>(METADATA);
 
         assert!(coerced.eq(&12345));
@@ -105,7 +109,7 @@ fn cell_ref_coerces() {
 fn cell_refmut_coerces() {
     unsafe {
         let cell = RefCell::new(12345);
-        let borrow: RefMut<dyn Any> = cell.borrow_mut();
+        let borrow: RefMut<'_, dyn Any> = cell.borrow_mut();
         let mut coerced = borrow.coerce::<dyn Foo>(metadata::<T, dyn Foo>());
         coerced.double();
 
@@ -222,7 +226,7 @@ fn innermost_type_id_of_mut_ref() {
 #[test]
 fn innermost_type_id_of_cell_ref() {
     let cell = RefCell::new(12345);
-    let borrow: Ref<dyn Any> = cell.borrow();
+    let borrow: Ref<'_, dyn Any> = cell.borrow();
     let type_id = borrow.innermost_type_id().unwrap();
 
     assert_eq!(type_id, TypeId::of::<i32>());
@@ -231,7 +235,7 @@ fn innermost_type_id_of_cell_ref() {
 #[test]
 fn innermost_type_id_of_cell_refmut() {
     let cell = RefCell::new(12345);
-    let borrow: RefMut<dyn Any> = cell.borrow_mut();
+    let borrow: RefMut<'_, dyn Any> = cell.borrow_mut();
     let type_id = borrow.innermost_type_id().unwrap();
 
     assert_eq!(type_id, TypeId::of::<i32>());

@@ -1,6 +1,15 @@
 #![cfg_attr(not(any(feature = "std", doc)), no_std)]
-#![cfg_attr(any(feature = "global", doc), feature(once_cell))]
-#![feature(doc_cfg, generic_associated_types, ptr_metadata, unsize)]
+#![cfg_attr(
+    any(feature = "global", doc, all(feature = "std", test)),
+    feature(once_cell)
+)]
+#![feature(
+    doc_cfg,
+    generic_associated_types,
+    ptr_metadata,
+    unsize,
+    option_result_unwrap_unchecked
+)]
 #![deny(missing_docs)]
 
 //! rattish enables dynamic casting between different trait objects.
@@ -86,7 +95,7 @@
 //! [`ptr_metadata`]: https://doc.rust-lang.org/nightly/unstable-book/library-features/ptr-metadata.html
 //! [`unsize`]: https://doc.rust-lang.org/nightly/unstable-book/library-features/unsize.html
 
-#[cfg(any(feature = "alloc", doc))]
+#[cfg(all(any(feature = "alloc", doc), not(feature = "std")))]
 extern crate alloc;
 
 pub mod container;
@@ -104,7 +113,7 @@ use db::{
 };
 
 #[cfg(any(feature = "global", doc))]
-use db::hash_map::DB;
+use db::{error::DatabaseError, hash_map::DB};
 
 #[cfg(feature = "trace")]
 use core::any::type_name;
@@ -187,7 +196,8 @@ where
     where
         U: 'static + ?Sized,
     {
-        DynImplements::dyn_implements::<U>(self, DB.get().expect("initialized database"))
+        let db = DB.get().ok_or(DatabaseError::NotInitialized)?;
+        DynImplements::dyn_implements::<U>(self, db)
     }
 }
 
@@ -208,7 +218,13 @@ where
         Self::Coerced<U>: Sized,
         Coerced<Self::Inner, U>: ptr::Pointee<Metadata = Metadata<U>>,
     {
-        DynCast::dyn_cast::<U>(self, DB.get().expect("initialized database"))
+        match DB.get() {
+            Some(db) => DynCast::dyn_cast::<U>(self, db),
+            None => Err(CastError {
+                source: DatabaseError::NotInitialized.into(),
+                pointer: self,
+            }),
+        }
     }
 }
 

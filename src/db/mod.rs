@@ -66,7 +66,7 @@ where
     {
         unsafe {
             let type_id = TypeId::of::<I>();
-            let metadata = ptr::metadata::<U>(ptr::null::<I>() as _);
+            let metadata = ptr::metadata::<U>(ptr::null::<I>());
             self.add(type_id, metadata);
         }
     }

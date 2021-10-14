@@ -12,10 +12,15 @@ use thiserror::Error;
 
 /// Error that arose on accessing a database.
 #[cfg_attr(feature = "thiserror", derive(Error))]
+#[non_exhaustive]
 pub enum DatabaseError<U>
 where
     U: ?Sized,
 {
+    /// The database has not been initialized.
+    #[cfg_attr(feature = "thiserror", error("database not initialized"))]
+    NotInitialized,
+
     /// The `requested_type` is not registered in the database.
     #[cfg_attr(feature = "thiserror", error(
         "requested type <{}> not registered in database",
@@ -32,15 +37,24 @@ where
     U: ?Sized,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let DatabaseError::RequestedTypeNotInDatabase { requested_type: _ } = self;
-        f.debug_tuple("RequestedTypeNotInDatabase")
-            .field(&type_name::<U>())
-            .finish()
+        #[allow(clippy::enum_glob_use)]
+        use DatabaseError::*;
+
+        #[allow(clippy::unneeded_field_pattern)]
+        match *self {
+            NotInitialized => write!(f, "NotInitialized"),
+
+            RequestedTypeNotInDatabase { requested_type: _ } => f
+                .debug_tuple("RequestedTypeNotInDatabase")
+                .field(&type_name::<U>())
+                .finish(),
+        }
     }
 }
 
 /// Error that arose on accessing a database entry.
 #[cfg_attr(feature = "thiserror", derive(Error))]
+#[non_exhaustive]
 pub enum DatabaseEntryError<U, P>
 where
     U: 'static + ?Sized,
@@ -80,7 +94,7 @@ where
         /// The [`TypeId`] of the concrete type underlying the provided instance
         /// of `P`.
         type_id: TypeId,
-        
+
         /// The type that was requested.
         requested_type: PhantomData<U>,
 
@@ -95,13 +109,15 @@ where
     P: ?Sized,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        #[allow(clippy::enum_glob_use)]
         use DatabaseEntryError::*;
 
-        match self {
-            DatabaseError { error } => f.debug_tuple("DatabaseError").field(error).finish(),
+        #[allow(clippy::unneeded_field_pattern)]
+        match *self {
+            DatabaseError { ref error } => f.debug_tuple("DatabaseError").field(error).finish(),
 
             ConcreteTypeDeterminationFailure {
-                reason,
+                ref reason,
                 instance_type: _,
             } => f
                 .debug_tuple("ConcreteTypeDeterminationFailure")
@@ -110,7 +126,7 @@ where
                 .finish(),
 
             ConcreteTypeNotRegisteredForTarget {
-                type_id,
+                ref type_id,
                 requested_type: _,
                 instance_type: _,
             } => f
@@ -129,7 +145,7 @@ where
     P: ?Sized,
 {
     fn from(error: DatabaseError<U>) -> Self {
-        DatabaseEntryError::DatabaseError { error }
+        Self::DatabaseError { error }
     }
 }
 
@@ -139,7 +155,7 @@ where
     P: ?Sized,
 {
     fn from(reason: TypeIdDeterminationError) -> Self {
-        DatabaseEntryError::ConcreteTypeDeterminationFailure {
+        Self::ConcreteTypeDeterminationFailure {
             reason,
             instance_type: PhantomData,
         }
@@ -149,7 +165,11 @@ where
 /// Error that arose on attempting to cast `pointer` to `U`.
 #[cfg_attr(feature = "thiserror", derive(Error))]
 #[cfg_attr(feature = "thiserror", error("{source}"))]
-pub struct CastError<U: 'static + ?Sized, P> {
+#[non_exhaustive]
+pub struct CastError<U, P>
+where
+    U: 'static + ?Sized,
+{
     /// The error that arose.
     pub source: DatabaseEntryError<U, P>,
     /// The (unmodified) pointer on which casting had been attempted, in order
@@ -162,7 +182,11 @@ where
     U: 'static + ?Sized,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let Self { source, pointer: _ } = self;
+        #[allow(clippy::unneeded_field_pattern)]
+        let Self {
+            ref source,
+            pointer: _,
+        } = *self;
         f.debug_struct("Error")
             .field("source", source)
             .finish_non_exhaustive()

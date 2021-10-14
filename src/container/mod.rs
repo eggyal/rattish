@@ -68,12 +68,13 @@ pub unsafe trait Coercible {
 pub type Coerced<T: Coercible, U> = T::Coerced<U>;
 
 /// Error that arose whilst determining a pointee's concrete type.
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "thiserror", derive(thiserror::Error))]
+#[non_exhaustive]
 pub enum TypeIdDeterminationError {
     /// The concrete type could not be determined because the pointer traverses
     /// a weak reference to some data that is no longer available.
-    #[cfg_attr(feature = "thiserror", error("unable to upgrade {type_name}"))]
+    #[cfg_attr(feature = "thiserror", error("{type_name} was dangling"))]
     UnableToUpgradeWeakReference {
         /// The name of the Weak reference type that could not be upgraded
         type_name: &'static str,

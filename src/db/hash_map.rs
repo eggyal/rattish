@@ -2,18 +2,16 @@
 
 use super::{Metadata, TypeDatabase, TypeDatabaseEntry};
 use std::{
-    any::{Any, TypeId},
+    any::{type_name, Any, TypeId},
     collections::HashMap,
+    fmt,
 };
 
 #[cfg(any(feature = "global", doc))]
 use std::lazy::SyncOnceCell;
 
-#[cfg(feature = "trace")]
-use core::any::type_name;
-
 /// A [`TypeDatabase`] backed by a [`HashMap`].
-#[derive(Default)]
+#[derive(Debug, Default)]
 #[doc(cfg(feature = "std"))]
 pub struct HashMapTypeDatabase(HashMap<TypeId, Box<dyn Any + Send + Sync>>);
 
@@ -28,7 +26,14 @@ where
     U: ?Sized,
 {
     fn default() -> Self {
-        HashMapTypeDatabaseEntry(Default::default())
+        Self(HashMap::default())
+    }
+}
+
+impl<U> fmt::Debug for HashMapTypeDatabaseEntry<U> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "HashMapTypeDatabaseEntry<{}> ", type_name::<U>())?;
+        f.debug_set().entries(self.0.keys()).finish()
     }
 }
 
@@ -63,7 +68,7 @@ macro_rules! rtti_global {
         $crate::db::hash_map::DB
             .set($crate::rtti!($($token)+))
             .ok()
-            .expect("uninitialized database");
+            .expect("database already initialized");
     }};
 }
 
@@ -73,7 +78,7 @@ where
 {
     #[cfg_attr(feature = "trace", tracing::instrument(skip(self, metadata)))]
     unsafe fn add(&mut self, type_id: TypeId, metadata: Metadata<U>) {
-        self.0.insert(type_id, metadata);
+        let _ = self.0.insert(type_id, metadata);
     }
 
     #[cfg_attr(feature = "trace", tracing::instrument(skip(self)))]
@@ -97,11 +102,13 @@ unsafe impl TypeDatabase for HashMapTypeDatabase {
     where
         U: 'static + ?Sized,
     {
-        self.0
-            .entry(TypeId::of::<U>())
-            .or_insert_with(|| Box::new(Self::Entry::<U>::default()))
-            .downcast_mut()
-            .unwrap()
+        unsafe {
+            self.0
+                .entry(TypeId::of::<U>())
+                .or_insert_with(|| Box::new(Self::Entry::<U>::default()))
+                .downcast_mut()
+                .unwrap_unchecked()
+        }
     }
 
     #[cfg_attr(feature = "trace", tracing::instrument(skip_all, fields(

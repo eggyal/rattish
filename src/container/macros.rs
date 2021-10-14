@@ -26,21 +26,26 @@ macro_rules! coercible_trait {
 
 macro_rules! coercibles {
     (
-        <$lt:lifetime, $t:ident, $u:ident>($self:ident, $metadata:ident) {
-            $(#[$feature:literal])? $ty:ty => $coerced:ty $($coerce:block)? as _,
+        <$t:ident, $u:ident>($self:ident, $metadata:ident) {
+            $(#[$feature:literal])?
+            $(@$lt:lifetime $tx:ty|)? $ty:ty => $coerced:ty $($coerce:block)? as _,
             $($rest:tt)*
         }
     ) => {
         coercibles! {
-            <$lt, $t, $u>($self, $metadata) {
-                $(#[$feature])? $ty => $coerced $($coerce)? as { (**$self).innermost_type_id() },
+            <$t, $u>($self, $metadata) {
+                $(#[$feature])?
+                $(@$lt $tx|)? $ty => $coerced $($coerce)? as {
+                    (**$self).innermost_type_id()
+                },
                 $($rest)*
             }
         }
     };
     (
-        <$lt:lifetime, $t:ident, $u:ident>($self:ident, $metadata:ident) {
-            $(#[$feature:literal])? $ty:ty => $coerced:ty $($coerce:block)? as $type:block,
+        <$t:ident, $u:ident>($self:ident, $metadata:ident) {
+            $(#[$feature:literal])?
+            $(@$lt:lifetime $tx:ty|)? $ty:ty => $coerced:ty $($coerce:block)? as $type:block,
             $($rest:tt)*
         }
     ) => {
@@ -48,7 +53,7 @@ macro_rules! coercibles {
             #[cfg(any(feature = $feature, doc))]
             #[doc(cfg(feature = $feature))]
         )?
-        unsafe impl<$lt, $t> $crate::container::InnermostTypeId for $ty
+        unsafe impl<$t> $crate::container::InnermostTypeId for $ty
         where
             $t: ?::core::marker::Sized + $crate::container::InnermostTypeId,
         {
@@ -59,15 +64,17 @@ macro_rules! coercibles {
         }
 
         coercibles! {
-            <$lt, $t, $u>($self, $metadata) {
-                $(#[$feature])? $ty => $coerced $($coerce)?,
+            <$t, $u>($self, $metadata) {
+                $(#[$feature])?
+                $(@$lt $tx|)? $ty => $coerced $($coerce)?,
                 $($rest)*
             }
         }
     };
     (
-        <$lt:lifetime, $t:ident, $u:ident>($self:ident, $metadata:ident) {
-            $(#[$feature:literal])? $ty:ty => $coerced:ty $coerce:block,
+        <$t:ident, $u:ident>($self:ident, $metadata:ident) {
+            $(#[$feature:literal])?
+            $(@$lt:lifetime $tx:ty|)? $ty:ty => $coerced:ty $coerce:block,
             $($rest:tt)*
         }
     ) => {
@@ -75,7 +82,7 @@ macro_rules! coercibles {
             #[cfg(any(feature = $feature, doc))]
             #[doc(cfg(feature = $feature))]
         )?
-        impl<$lt, $t> $crate::container::Pointer for $ty
+        impl<$t> $crate::container::Pointer for $ty
         where
             $t: ?::core::marker::Sized + $crate::container::Coercible,
         {
@@ -87,19 +94,39 @@ macro_rules! coercibles {
             where
                 U: ?::core::marker::Sized,
                 Self::Coerced<U>: ::core::marker::Sized,
-            $coerce
+            {
+                #[allow(unused_unsafe)]
+                unsafe {$coerce}
+            }
         }
 
         coercibles! {
-            <$lt, $t, $u>($self, $metadata) {
-                $(#[$feature])? $ty => $coerced,
+            <$t, $u>($self, $metadata) {
+                $(#[$feature])?
+                $(@$lt $tx|)? $ty => $coerced,
                 $($rest)*
             }
         }
     };
     (
-        <$lt:lifetime, $t:ident, $u:ident>($self:ident, $metadata:ident) {
-            $(#[$feature:literal])? $ty:ty => $coerced:ty,
+        <$t:ident, $u:ident>($self:ident, $metadata:ident) {
+            $(#[$feature:literal])?
+            @$lt:lifetime $tx:ty|$ty:ty => $coerced:ty,
+            $($rest:tt)*
+        }
+    ) => {
+        coercibles! {
+            <$t, $u>($self, $metadata) {
+                $(#[$feature])?
+                @$lt $tx => $coerced,
+                $($rest)*
+            }
+        }
+    };
+    (
+        <$t:ident, $u:ident>($self:ident, $metadata:ident) {
+            $(#[$feature:literal])?
+            $(@$lt:lifetime)? $ty:ty => $coerced:ty,
             $($rest:tt)*
         }
     ) => {
@@ -107,7 +134,7 @@ macro_rules! coercibles {
             #[cfg(any(feature = $feature, doc))]
             #[doc(cfg(feature = $feature))]
         )?
-        unsafe impl<$lt, $t> $crate::container::Coercible for $ty
+        unsafe impl<$($lt,)? $t> $crate::container::Coercible for $ty
         where
             $t: ?::core::marker::Sized + $crate::container::Coercible,
         {
@@ -117,10 +144,10 @@ macro_rules! coercibles {
         }
 
         coercibles! {
-            <$lt, $t, $u>($self, $metadata) {
+            <$t, $u>($self, $metadata) {
                 $($rest)*
             }
         }
     };
-    (<$lt:lifetime, $t:ident, $u:ident>($self:ident, $metadata:ident) {}) => {};
+    (<$t:ident, $u:ident>($self:ident, $metadata:ident) {}) => {};
 }
