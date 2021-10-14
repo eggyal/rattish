@@ -28,6 +28,23 @@ macro_rules! coercibles {
     (
         <$t:ident, $u:ident>($self:ident, $metadata:ident) {
             $(#[$feature:literal])?
+            $(@$lt:lifetime $tx:ty|)? $ty:ty => $coerced:ty = mapped
+            $($rest:tt)*
+        }
+    ) => {
+        coercibles! {
+            <$t, $u>($self, $metadata) {
+                $(#[$feature])?
+                $(@$lt $tx|)? $ty => $coerced {
+                    Self::map($self, |r| r.coerce($metadata))
+                }
+                $($rest)*
+            }
+        }
+    };
+    (
+        <$t:ident, $u:ident>($self:ident, $metadata:ident) {
+            $(#[$feature:literal])?
             $(@$lt:lifetime $tx:ty|)? $ty:ty => $coerced:ty $($coerce:block)? as _,
             $($rest:tt)*
         }
