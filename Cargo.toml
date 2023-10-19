@@ -16,7 +16,7 @@ global = ["std"]
 
 [dependencies]
 thiserror = { version = "1.0.30", optional = true }
-tracing = { version = "0.1.29", optional = true }
+tracing = { version = "0.1.40", optional = true }
 
 [package.metadata.docs.rs]
 all-features = true
